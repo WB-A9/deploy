@@ -1,4 +1,4 @@
 pandas
-st_aggrid
+streamlit-aggrid
 altair
 plotly
