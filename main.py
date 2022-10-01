@@ -74,7 +74,7 @@ def tag_sign(number):
 
 def main():
     st.set_page_config(
-    page_title='인스타그램 현황',    layout='wide')
+    page_title='WB-A9 인스타그램 현황', layout='wide')
     
     
     df_daily_summary = pd.read_csv('data/df_daily_summary.csv')
@@ -88,21 +88,28 @@ def main():
     df_latest['rank'] = df_latest['followers_count'].rank(ascending = False)
     df_latest = df_latest.rename(columns = feature_dict)
     up_to_date = up_to_date.strftime('%Y년 %m월 %d일')
-    st.subheader(f'업체 별 Instagram 현황: {up_to_date} 기준')
-    # added_feature = st.multiselect('보고 싶은 특성 : ',list(feature_dict.values()),['순위','이름','팔로워 수','팔로워 증감(수)'])
+    st.subheader('🍷와인 인플루언서 Instagram 현황🥂')
+    st.write(f'{up_to_date} 기준')
     df_latest_toshow = df_latest.reindex(columns = list(feature_dict.values())).sort_values('순위')
 
 
-    col1,col2 = st.columns(2)
+    col1,col2, col3 = st.columns([0.6, 0.2, 0.2])
     with col1:
         selection = aggrid_interactive_table(df=df_latest_toshow)
+        st.write('선택시 자세히 보기')
     with col2:
-        st.write('업체 클릭 후 자세히 보기')
         if selection['selected_rows']:
             selected = selection["selected_rows"][0]
             url = df_latest.loc[df_latest['이름'] == selected['이름'],'profile_picture_url'].values[0]
-            st.image(url,width = 120)
+            bio = df_latest.loc[df_latest['이름'] == selected['이름'],'biography'].values[0]
+            st.image(url)
             st.subheader(f"{selected['이름']}")
+            if isinstance(bio, str):
+                st.write('Biography')
+                st.write(bio)
+    with col3:
+        if selection['selected_rows']:
+            
             st.write(f"순위: {selected['순위']} / {n_business} 위")
             st.write(f"팔로워 수: {selected['팔로워 수']} 명(전일대비 {tag_sign(selected['팔로워 증감(수)'])} )")
             st.write(f"팔로우 수: {selected['팔로우 수']} 명(전일대비 {tag_sign(selected['팔로우 증감(수)'])} ) ")
@@ -118,7 +125,7 @@ def main():
     
 
     st.markdown('---')
-    st.subheader(f'기간 내 추이')
+    st.subheader(f'📈기간 내 추이')
     
     col1,col2 = st.columns(2)
     buttons = [st.button('전체'),st.button('Winebook & After9')]
@@ -144,9 +151,6 @@ def main():
         chart.update_xaxes(rangeslider_visible=True)
         
         st.plotly_chart(chart,use_container_width= True)
-        
-    
-    st.write(df_daily_summary)
 
 main()
 
