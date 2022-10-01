@@ -53,11 +53,12 @@ def aggrid_interactive_table(df: pd.DataFrame):
         df,enableRowGroup=True,enableValue=True,enablePivot=True
     )
 
-    # options.configure_side_bar()
+    options.configure_side_bar()
 
     options.configure_selection("single")
+    
     selection = AgGrid(
-        df, enable_enterprise_modules=True, gridOptions=options.build(), theme="streamlit", update_mode=GridUpdateMode.MODEL_CHANGED, allow_unsafe_jscode=True,    )
+        df, enable_enterprise_modules=True, gridOptions=options.build(), theme="streamlit", update_mode=GridUpdateMode.MODEL_CHANGED, allow_unsafe_jscode=True)
 
     return selection
 
