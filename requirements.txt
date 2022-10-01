@@ -1,0 +1,7 @@
+pandas==1.4.2
+requests==2.27.1
+streamlit
+pandas
+st_aggrid
+altair
+plotly
