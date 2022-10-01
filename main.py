@@ -57,7 +57,7 @@ def aggrid_interactive_table(df: pd.DataFrame):
 
     options.configure_selection("single")
     selection = AgGrid(
-        df, enable_enterprise_modules=True, gridOptions=options.build(), theme="alpine", update_mode=GridUpdateMode.MODEL_CHANGED, allow_unsafe_jscode=True,    )
+        df, enable_enterprise_modules=True, gridOptions=options.build(), theme="streamlit", update_mode=GridUpdateMode.MODEL_CHANGED, allow_unsafe_jscode=True,    )
 
     return selection
 
@@ -104,11 +104,11 @@ def main():
             st.image(url,width = 120)
             st.subheader(f"{selected['이름']}")
             st.write(f"순위: {selected['순위']} / {n_business} 위")
-            st.write(f"팔로워 수: {selected['팔로워 수']} 명( {tag_sign(selected['팔로워 증감(수)'])} )")
-            st.write(f"팔로우 수: {selected['팔로우 수']} 명( {tag_sign(selected['팔로우 증감(수)'])} ) ")
-            st.write(f"게시물 수: {selected['게시물 수']} 개( {tag_sign(selected['게시물 증감(수)'])} )")
-            st.write(f"좋아요 수: {selected['좋아요 수']} 개( {tag_sign(selected['좋아요 증감(수)'])} )")
-            st.write(f"댓글 수: {selected['댓글 수']} 개( {tag_sign(selected['댓글 증감(수)'])} )")
+            st.write(f"팔로워 수: {selected['팔로워 수']} 명(전일대비 {tag_sign(selected['팔로워 증감(수)'])} )")
+            st.write(f"팔로우 수: {selected['팔로우 수']} 명(전일대비 {tag_sign(selected['팔로우 증감(수)'])} ) ")
+            st.write(f"게시물 수: {selected['게시물 수']} 개(전일대비 {tag_sign(selected['게시물 증감(수)'])} )")
+            st.write(f"좋아요 수: {selected['좋아요 수']} 개(전일대비 {tag_sign(selected['좋아요 증감(수)'])} )")
+            st.write(f"댓글 수: {selected['댓글 수']} 개(전일대비 {tag_sign(selected['댓글 증감(수)'])} )")
     
     source = df_daily_summary.copy().sort_values('date')
     feature_dict.update({'date' : '날짜'})
@@ -146,7 +146,7 @@ def main():
         st.plotly_chart(chart,use_container_width= True)
         
     
-
+    st.write(df_daily_summary)
 
 main()
 
