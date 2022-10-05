@@ -78,23 +78,15 @@ def aggrid_interactive_table(df: pd.DataFrame):
 
     return selection
 
-def tag_sign(number):
-    if number > 0:
-        sign = '🔼 '
-    elif number < 0:
-        sign = '🔽 '
-    else:
-        sign = ''        
-    return sign + str(abs(number))
-
 def main():
     st.set_page_config(
     page_title='WB-A9 인스타그램 현황', layout='wide')
     
-    
     df_daily_summary = pd.read_csv('data/df_daily_summary.csv')
     df_daily_summary['date'] = pd.to_datetime(df_daily_summary['date'])
     summarizer = Summary(df_daily_summary.sort_values('date'))
+
+    tab1, tab2 = st.tabs(['현황', '기간 내 추이'])
 
     df_daily_summary = summarizer.get_summaries(summary_func=['diff'], periods = [1])
     n_business = df_daily_summary['name'].nunique()
@@ -107,81 +99,143 @@ def main():
     
     df_latest.columns = translate(df_latest.columns)
     up_to_date = up_to_date.strftime('%Y년 %m월 %d일')
-    st.subheader('🍷와인 인플루언서 Instagram 현황🥂')
-    st.write(f'{up_to_date} 기준')
-    col_to_show = ['순위', '이름', '팔로워 수', '팔로우 수', '게시물 수', '좋아요 수', '댓글 수']
-    df_latest_toshow = df_latest.reindex(columns = col_to_show).sort_values('순위')
 
-    
-    col1, col2, col3 = st.columns([0.6, 0.2, 0.2])
-    with col1:
-        selection = aggrid_interactive_table(df=df_latest_toshow)
-        st.write('선택시 자세히 보기')
-    with col2:
-        if selection['selected_rows']:
-            selected = selection["selected_rows"][0]
-            selected_df = df_latest.loc[df_latest['이름'] == selected['이름']]
+    with tab1:
+        st.subheader('🍷와인 인플루언서 Instagram 현황🥂')
+        st.write(f'{up_to_date} 기준')
+        col_to_show = ['순위', '이름', '팔로워 수', '팔로우 수', '게시물 수', '좋아요 수', '댓글 수']
+        df_latest_toshow = df_latest.reindex(columns = col_to_show).sort_values('순위')
+
+        
+        col1, col2, col3, col4 = st.columns([0.5, 0.2, 0.1, 0.1])
+        with col1:
+            selection = aggrid_interactive_table(df=df_latest_toshow)
+            st.write('선택시 자세히 보기')
+        with col2:
+            with st.container():
+                if selection['selected_rows']:
+                    selected = selection["selected_rows"][0]
+                    selected_name = selected['이름']
+                    selected_df = df_latest.loc[df_latest['이름'] == selected_name]
+                    selected_df[selected_df.select_dtypes('number').columns] = selected_df.select_dtypes('number').astype(int)
+                    url = selected_df['profile picture url'].values[0]
+                    bio = selected_df['biography'].values[0]
+                    st.image(url)
+                    st.subheader(f"{selected_name}")
+                    if isinstance(bio, str):
+                        st.write('Biography')
+                        st.caption(bio)
+                    with col3:
+                        with st.container():
+                            
+                            st.metric('🏅 순위', value = f"{selected['순위']} 위", delta= None , delta_color="normal", help=None)
+                            st.metric(f"👥 팔로워 수", value = f"{selected['팔로워 수']}명", delta = f"{selected_df['팔로워 증감(수)'].values[0]}명")
+                            st.metric(f"🤝 팔로우 수", value = f"{selected['팔로우 수']}명", delta = f"{selected_df['팔로우 증감(수)'].values[0]}명")
+                    with col4:
+                        with st.container():
+                            st.metric(f"📷 게시물 수", value = f"{selected['게시물 수']}개", delta = f"{selected_df['게시물 증감(수)'].values[0]}개")
+                            st.metric(f"❤️ 좋아요 수", value = f"{selected['좋아요 수']}개", delta = f"{selected_df['좋아요 증감(수)'].values[0]}개")
+                            st.metric(f"💬 댓글 수", value = f"{selected['댓글 수']}개", delta = f"{selected_df['댓글 증감(수)'].values[0]}개")
+                        
+
             
-            url = selected_df['profile picture url'].values[0]
-            bio = selected_df['biography'].values[0]
-            st.image(url)
-            st.subheader(f"{selected['이름']}")
-            if isinstance(bio, str):
-                st.write('Biography')
-                st.write(bio)
-            with col3:
-                    st.write(f"순위: {selected['순위']} / {n_business} 위")
-                    st.write(f"팔로워 수: {selected['팔로워 수']} 명(전일대비 {tag_sign(selected_df['팔로워 증감(수)'].values[0])} )")
-                    st.write(f"팔로우 수: {selected['팔로우 수']} 명(전일대비 {tag_sign(selected_df['팔로우 증감(수)'].values[0])} ) ")
-                    st.write(f"게시물 수: {selected['게시물 수']} 개(전일대비 {tag_sign(selected_df['게시물 증감(수)'].values[0])} )")
-                    st.write(f"좋아요 수: {selected['좋아요 수']} 개(전일대비 {tag_sign(selected_df['좋아요 증감(수)'].values[0])} )")
-                    st.write(f"댓글 수: {selected['댓글 수']} 개(전일대비 {tag_sign(selected_df['댓글 증감(수)'].values[0])} )")
-    
 
-    st.markdown('---')
-    st.subheader(f'📈기간 내 추이')
-    
-    
-    source = df_daily_summary.copy()
-    source.columns = translate(source)
-    col1,col2, col3 = st.columns(3)
-    
+        st.markdown('---')
+        if selection['selected_rows']:
+            
+            media = pd.read_csv('data/updated_media.csv')
+            for c in ['timestamp', 'date']:
+                media[c] = pd.to_datetime(media[c])
 
-    
-    all_features =  source.select_dtypes('number').drop(columns = 'id').columns
-    buttons = [st.button('전체'),st.button('Winebook & After9')]
-    with col1:
-        
-        if buttons[1] or ("selected_business" not in st.session_state):        
-                default_business = ['winebook_official','after9']
-        elif buttons[0]:
-                default_business = all_business.copy()
-        else:
-            default_business = st.session_state.selected_business
-        selected_business = st.multiselect('보고 싶은 업체 선택', all_business, default_business, key = 'selected_business')            
+            
+            selected_media = media.loc[media['name'] == selected_name].reset_index(drop = True).T.to_dict()
+            n_selected_media = len(selected_media.keys())
+            st.subheader(f'[{selected_name}] 게시물')
+            st.markdown(f'#### {n_selected_media}개')
+            col1, col2 = st.columns(2)
+            with col1:
+                n_view = st.selectbox("보기 수", options = range(4, 7))
+            with col2:
+                view_index = st.slider('슬라이드로 넘기기', min_value= 0, max_value = n_selected_media - n_view - 1)
+            cols = st.columns(n_view)
+            for c in range(n_view):
+                with cols[c]:
+                    with st.container():
+                        media_time = selected_media[view_index + c]['timestamp'].strftime("%Y년 %m월 %d일")
+                        st.caption(media_time)
+                        media_url = selected_media[view_index + c]['media_url']
+                        if pd.isnull(media_url):
+                            media_url = 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/ac/No_image_available.svg/1024px-No_image_available.svg.png'
+                        if selected_media[view_index + c]['media_type'] == 'VIDEO':
+                            st.video(media_url)
+                        else:
+                            st.image(media_url)
+                        st.markdown(f'''
+                        ❤️ {selected_media[view_index + c]['like_count']}
+                        💬 {selected_media[view_index + c]['comments_count']}
+                        ''')
+                        st.caption(selected_media[view_index + c]['caption'])
+                        
+                    st.markdown(f'''
+                    
+                    [🔗 게시물로]({selected_media[view_index + c]['permalink']})
+                    
+                    ''')
+                    
+                    
+                
 
-    with col2:
-        target_features = st.multiselect('보고 싶은 수치',all_features,'팔로워 수')
-        
-    with col3:
-        
-        period =  st.selectbox('증감 비교 일수', options = range(1,  source["날짜"].nunique()), disabled = all('증감' not in f for f in target_features))
-        source = summarizer.get_summaries(summary_func = ['diff', 'pct_change'], periods = [period], fillna = False)
-        source.columns = translate(source.columns)
-    
-    
-    source = source[source['이름'].isin(selected_business)]
-    for target_feature in target_features:
-        if '증감' in target_feature:
-            source_to_plot = source.copy().dropna(subset = target_features)
-        else:
-            source_to_plot = source.copy()
-        chart = px.line(data_frame = source_to_plot, x = '날짜', y = target_feature, line_group = '이름', markers = True, color = '이름', title = f'{target_feature} 추이', hover_data = ['이름','날짜',target_feature]
 
-        )
-        chart.update_xaxes(rangeslider_visible=True)
+    with tab2:
+        st.subheader(f'📈기간 내 추이')
         
-        st.plotly_chart(chart,use_container_width= True)
+        
+        source = df_daily_summary.copy()
+        source.columns = translate(source)
+        col1, col2, col3, col4 = st.columns(4)
+        
+
+        
+        all_features =  source.select_dtypes('number').drop(columns = 'id').columns
+        buttons = [st.button('전체'),st.button('Winebook & After9')]
+        with col1:
+            
+            if buttons[1] or ("selected_business" not in st.session_state):        
+                    default_business = ['winebook_official','after9']
+            elif buttons[0]:
+                    default_business = all_business.copy()
+            else:
+                default_business = st.session_state.selected_business
+            selected_business = st.multiselect('보고 싶은 업체 선택', all_business, default_business, key = 'selected_business')            
+
+        with col2:
+            target_features = st.multiselect('보고 싶은 수치',all_features,'팔로워 수')
+            
+        with col3:
+            
+            period =  st.selectbox('증감 비교 일수', options = range(1,  source["날짜"].nunique()), disabled = all('증감' not in f for f in target_features))
+            source = summarizer.get_summaries(summary_func = ['diff', 'pct_change'], periods = [period], fillna = False)
+            source.columns = translate(source.columns)
+        with col4:
+            plot_type = st.radio('차트 종류', options = ['라인', '바'], index = 0)
+        
+        source = source[source['이름'].isin(selected_business)]
+        for target_feature in target_features:
+            plot_title = f'{target_feature}'
+            if '증감' in target_feature:
+                source_to_plot = source.copy().dropna(subset = target_features)
+                plot_title += f'({period}일 전 대비)'
+            else:
+                source_to_plot = source.copy()
+            if plot_type == '라인':
+                chart = px.line(data_frame = source_to_plot, x = '날짜', y = target_feature, line_group = '이름', markers = True, color = '이름', title = plot_title, hover_data = ['이름','날짜',target_feature]
+                )
+            elif plot_type == '바':
+                chart = px.bar(data_frame = source_to_plot, x = '날짜', y = target_feature, barmode = 'group', text_auto='.2s', color = '이름', title = plot_title, hover_data = ['이름','날짜',target_feature]
+            )
+            chart.update_xaxes(rangeslider_visible=True)
+            st.plotly_chart(chart,use_container_width= True)
+            
 
 main()
 
