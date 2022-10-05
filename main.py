@@ -89,7 +89,7 @@ def main():
     tab1, tab2 = st.tabs(['현황', '기간 내 추이'])
 
     df_daily_summary = summarizer.get_summaries(summary_func=['diff'], periods = [1])
-    n_business = df_daily_summary['name'].nunique()
+    # n_business = df_daily_summary['name'].nunique()
     all_business = df_daily_summary['name'].unique()
 
     up_to_date = max(df_daily_summary['date'])
