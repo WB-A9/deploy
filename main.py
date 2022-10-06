@@ -9,32 +9,6 @@ from modules.stats import Summary
 
 pio.templates.default = "simple_white"
 
-def get_chart(data,target_col,target_name,title):
-    hover = alt.selection_single(
-        fields=["날짜"], nearest=True, on="mouseover", empty="none",    )
-
-    lines = (
-        alt.Chart(data,title= title)
-        .mark_line()
-        .encode(
-            x="date(이름)",     y= target_col,     color="이름")
-    )
-
-    # Draw points on the line,and highlight based on selection
-    points = lines.transform_filter(hover).mark_circle(size=65)
-
-    # Draw a rule at the location of the selection
-    tooltips = (
-        alt.Chart(data)
-        .mark_rule()
-        .encode(
-            x="date(날짜)",     y= target_col,     opacity=alt.condition(hover,alt.value(0.3),alt.value(0)),     tooltip=[
-                alt.Tooltip("이름",title="이름"),         alt.Tooltip("날짜",title="날짜"),         alt.Tooltip(target_col,title=target_name),     ], )
-        .add_selection(hover)
-    )
-
-    return (lines + points + tooltips).interactive()
-
 def translate(columns):
     trans_dict = {'rank': '순위', 'name': '이름', 'followers' : '팔로워', 'follows': '팔로우', 'media': '게시물', 'like': '좋아요', 'comments': '댓글', 'diff': '증감(수)', 'pct_change': '증감(%)', 'count': '수', 'ratio': '당', 'date': '날짜'}
     trans_cols = []
@@ -53,9 +27,6 @@ def translate(columns):
         trans_cols.append(trans_words.strip())
     return trans_cols
 
-def set_date_range(start = '2021-11-20',end = '2021-12-25'):    
-    return pd.date_range(start=start,end=end,freq='D')
-
 def aggrid_interactive_table(df: pd.DataFrame):
     """Creates an st-aggrid interactive table based on a dataframe.
 
@@ -71,12 +42,17 @@ def aggrid_interactive_table(df: pd.DataFrame):
 
     options.configure_side_bar()
 
-    options.configure_selection("single")
+    options.configure_selection("None")
     
     selection = AgGrid(
-        df, enable_enterprise_modules=True, gridOptions=options.build(), theme="streamlit", update_mode=GridUpdateMode.MODEL_CHANGED, allow_unsafe_jscode=True)
+        df, enable_enterprise_modules=True, gridOptions=options.build(), theme="streamlit", fit_columns_on_grid_load = True, update_mode=GridUpdateMode.MODEL_CHANGED, allow_unsafe_jscode=True)
 
     return selection
+@st.cache
+def convert_df(df):
+    # IMPORTANT: Cache the conversion to prevent computation on every rerun
+    return df.to_csv().encode('utf-8')
+
 
 def main():
     st.set_page_config(
@@ -85,80 +61,114 @@ def main():
     df_daily_summary = pd.read_csv('data/df_daily_summary.csv')
     df_daily_summary['date'] = pd.to_datetime(df_daily_summary['date'])
     summarizer = Summary(df_daily_summary.sort_values('date'))
-
+    media = pd.read_csv('data/updated_media.csv')
+    
     tab1, tab2 = st.tabs(['현황', '기간 내 추이'])
 
     df_daily_summary = summarizer.get_summaries(summary_func=['diff'], periods = [1])
-    # n_business = df_daily_summary['name'].nunique()
+    n_business = df_daily_summary['name'].nunique()
     all_business = df_daily_summary['name'].unique()
 
     up_to_date = max(df_daily_summary['date'])
 
     df_latest = df_daily_summary.loc[df_daily_summary['date'] == up_to_date].reset_index(drop = True)
-    df_latest['rank'] = df_latest['followers_count'].rank(ascending = False)
+    df_latest['rank'] = df_latest['followers_count'].rank(ascending = False).astype(int)
     
     df_latest.columns = translate(df_latest.columns)
     up_to_date = up_to_date.strftime('%Y년 %m월 %d일')
-
+    
     with tab1:
         st.subheader('🍷와인 인플루언서 Instagram 현황🥂')
-        st.write(f'{up_to_date} 기준')
-        col_to_show = ['순위', '이름', '팔로워 수', '팔로우 수', '게시물 수', '좋아요 수', '댓글 수']
-        df_latest_toshow = df_latest.reindex(columns = col_to_show).sort_values('순위')
-
         
-        col1, col2, col3, col4 = st.columns([0.5, 0.2, 0.1, 0.1])
+        col_to_show = ['순위', '이름', '팔로워 수', '팔로우 수', '게시물 수', '좋아요 수', '댓글 수', '게시물 당 좋아요', '게시물 당 댓글']
+        df_latest_toshow = df_latest.reindex(columns = col_to_show).sort_values('순위')
+        
+        col1, col2, col3, col4, col5 = st.columns([0.2, 0.2, 0.2, 0.1, 0.1])
+        
         with col1:
-            selection = aggrid_interactive_table(df=df_latest_toshow)
-            st.write('선택시 자세히 보기')
+            with st.container():
+                st.write(f'{up_to_date} 기준')
+                selected_name = st.selectbox('보고 싶은 업체', all_business, index=4)
+                
+        
         with col2:
             with st.container():
-                if selection['selected_rows']:
-                    selected = selection["selected_rows"][0]
-                    selected_name = selected['이름']
-                    selected_df = df_latest.loc[df_latest['이름'] == selected_name]
-                    selected_df[selected_df.select_dtypes('number').columns] = selected_df.select_dtypes('number').astype(int)
-                    url = selected_df['profile picture url'].values[0]
-                    bio = selected_df['biography'].values[0]
-                    st.image(url)
-                    st.subheader(f"{selected_name}")
-                    if isinstance(bio, str):
-                        st.write('Biography')
-                        st.caption(bio)
-                    with col3:
-                        with st.container():
-                            
-                            st.metric('🏅 순위', value = f"{selected['순위']} 위", delta= None , delta_color="normal", help=None)
-                            st.metric(f"👥 팔로워 수", value = f"{selected['팔로워 수']}명", delta = f"{selected_df['팔로워 증감(수)'].values[0]}명")
-                            st.metric(f"🤝 팔로우 수", value = f"{selected['팔로우 수']}명", delta = f"{selected_df['팔로우 증감(수)'].values[0]}명")
-                    with col4:
-                        with st.container():
-                            st.metric(f"📷 게시물 수", value = f"{selected['게시물 수']}개", delta = f"{selected_df['게시물 증감(수)'].values[0]}개")
-                            st.metric(f"❤️ 좋아요 수", value = f"{selected['좋아요 수']}개", delta = f"{selected_df['좋아요 증감(수)'].values[0]}개")
-                            st.metric(f"💬 댓글 수", value = f"{selected['댓글 수']}개", delta = f"{selected_df['댓글 증감(수)'].values[0]}개")
-                        
+                selected = df_latest.loc[df_latest['이름'] == selected_name].to_dict('records')[0]
+                
+                url = selected['profile picture url']
+                st.image(url)
+                
 
-            
+        with col3:
+            with st.container():
+                st.subheader(f"{selected_name}")
+                bio = selected['biography']
+                website = selected['website']
+                
+                if isinstance(bio, str):
+                    st.write('Biography')
+                    st.caption(bio)
+                if isinstance(website, str):
+                    st.write('Website')
+                    st.caption(website)
+        with col4:
+            with st.container():
+                st.metric(f'🏅 순위', value = f"{selected['순위']}위", delta= f'전체 {n_business}개 중' , delta_color= 'off')
+                st.metric(f"👥 팔로워 수", value = f"{selected['팔로워 수']}명", delta = f"{selected['팔로워 증감(수)']:.0f}명")
+                st.metric(f"🤝 팔로우 수", value = f"{selected['팔로우 수']}명", delta = f"{selected['팔로우 증감(수)']:.0f}명")
+        with col5:
+            with st.container():
+                st.metric(f"📷 게시물 수", value = f"{selected['게시물 수']}개", delta = f"{selected['게시물 증감(수)']:.0f}개")
+                st.metric(f"❤️ 좋아요 수", value = f"{selected['좋아요 수']}개", delta = f"{selected['좋아요 증감(수)']:.0f}개")
+                st.metric(f"💬 댓글 수", value = f"{selected['댓글 수']}개", delta = f"{selected['댓글 증감(수)']:.0f}개")
+                    
 
-        st.markdown('---')
-        if selection['selected_rows']:
-            
-            media = pd.read_csv('data/updated_media.csv')
+        with st.expander(label = 'raw data 보기'):
+            st.write(f'{up_to_date} 기준')
+            selection = aggrid_interactive_table(df=df_latest_toshow)
+            # csv = convert_df(df_latest_toshow)
+            # st.download_button(
+            # label="csv로 저장하기",
+            # data=csv,
+            # file_name=f'IG_data_{up_to_date}.csv',
+            # mime='text/csv',
+            # )    
+    
+        with st.expander('게시물 보기'):
+            df_media = media.copy()
             for c in ['timestamp', 'date']:
-                media[c] = pd.to_datetime(media[c])
-
-            
-            selected_media = media.loc[media['name'] == selected_name].reset_index(drop = True).T.to_dict()
-            n_selected_media = len(selected_media.keys())
+                df_media[c] = pd.to_datetime(df_media[c])
+           
             st.subheader(f'[{selected_name}] 게시물')
-            st.markdown(f'#### {n_selected_media}개')
-            col1, col2 = st.columns(2)
+            # st.markdown(f'#### {n_selected_media}개')
+            col1, col2, col3, col4, col5 = st.columns([0.1, 0.1, 0.5, 0.1, 0.1])
             with col1:
                 n_view = st.selectbox("보기 수", options = range(4, 7))
-            with col2:
-                view_index = st.slider('슬라이드로 넘기기', min_value= 0, max_value = n_selected_media - n_view - 1)
+                selected_media = df_media.loc[df_media['name'] == selected_name].reset_index(drop = True).T.to_dict()
+                n_selected_media = len(selected_media.keys())
+                max_page = n_selected_media - n_view - 1
+                
+            # with col2:
+            #     media_order = st.radio('정렬', options = ['최신순', '오래된순'], index = 0)
+            with col4:
+                with st.container():
+                    if st.button('처음으로'):
+                        st.session_state.view_index = 0
+                    if st.button('이전') and st.session_state.view_index > 0:
+                        st.session_state.view_index -= 1
+
+            with col5:
+                with st.container():
+                    if st.button('끝으로'):
+                        st.session_state.view_index = max_page
+                    if st.button('다음') and st.session_state.view_index < max_page:
+                        st.session_state.view_index += 1
+
+            with col3:
+                view_index = st.slider('슬라이드로 넘기기', min_value= 0, max_value = max_page, key = 'view_index')
             cols = st.columns(n_view)
             for c in range(n_view):
+                
                 with cols[c]:
                     with st.container():
                         media_time = selected_media[view_index + c]['timestamp'].strftime("%Y년 %m월 %d일")
@@ -182,9 +192,6 @@ def main():
                     
                     ''')
                     
-                    
-                
-
 
     with tab2:
         st.subheader(f'📈기간 내 추이')
@@ -194,7 +201,7 @@ def main():
         source.columns = translate(source)
         col1, col2, col3, col4 = st.columns(4)
         
-
+        
         
         all_features =  source.select_dtypes('number').drop(columns = 'id').columns
         buttons = [st.button('전체'),st.button('Winebook & After9')]
@@ -224,14 +231,19 @@ def main():
             plot_title = f'{target_feature}'
             if '증감' in target_feature:
                 source_to_plot = source.copy().dropna(subset = target_features)
-                plot_title += f'({period}일 전 대비)'
+                plot_title += f'({period}일 전 대비)'     
             else:
                 source_to_plot = source.copy()
+            if source_to_plot[target_feature].dtype == int:
+                text_auto = True
+            else:
+                text_auto = '.2f'
+            
             if plot_type == '라인':
                 chart = px.line(data_frame = source_to_plot, x = '날짜', y = target_feature, line_group = '이름', markers = True, color = '이름', title = plot_title, hover_data = ['이름','날짜',target_feature]
                 )
             elif plot_type == '바':
-                chart = px.bar(data_frame = source_to_plot, x = '날짜', y = target_feature, barmode = 'group', text_auto='.2s', color = '이름', title = plot_title, hover_data = ['이름','날짜',target_feature]
+                chart = px.bar(data_frame = source_to_plot, x = '날짜', y = target_feature, barmode = 'group', text_auto= text_auto, color = '이름', title = plot_title, hover_data = ['이름','날짜',target_feature]
             )
             chart.update_xaxes(rangeslider_visible=True)
             st.plotly_chart(chart,use_container_width= True)
