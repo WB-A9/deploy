@@ -77,6 +77,9 @@ def main():
     df_latest.columns = translate(df_latest.columns)
     up_to_date = up_to_date.strftime('%Y년 %m월 %d일')
     
+    def update_business():
+        st.session_state.view_index = 0
+
     with tab1:
         st.subheader('🍷와인 인플루언서 Instagram 현황🥂')
         
@@ -88,7 +91,8 @@ def main():
         with col1:
             with st.container():
                 st.write(f'{up_to_date} 기준')
-                selected_name = st.selectbox('보고 싶은 업체', all_business, index=4)
+                selected_name = st.selectbox('보고 싶은 업체', all_business, index=4, on_change = update_business)
+                
                 
         
         with col2:
@@ -166,6 +170,7 @@ def main():
 
             with col3:
                 view_index = st.slider('슬라이드로 넘기기', min_value= 0, max_value = max_page, key = 'view_index')
+                
             cols = st.columns(n_view)
             for c in range(n_view):
                 
