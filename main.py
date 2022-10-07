@@ -131,12 +131,12 @@ def main():
 
         with st.expander(label = 'raw data 보기'):
             st.write(f'{up_to_date} 기준')
-            selection = aggrid_interactive_table(df=df_latest_toshow)
+            aggrid_interactive_table(df=df_latest_toshow)
             csv = convert_df(df_latest_toshow)
             st.download_button(
             label="csv로 저장하기",
             data=csv,
-            file_name=f'IG_data_{up_to_date}.csv',
+            file_name=f"IG_data_{all_date.max().strftime('%Y%m%d')}.csv",
             mime='text/csv',
             )    
     
@@ -230,9 +230,7 @@ def main():
             business_to_compare = st.multiselect('비교 계정 선택', set(all_business) - set([selected_name]), default_business, key = 'business_to_compare')            
             selected_business = [selected_name] + business_to_compare
         with col2:
-            target_features = st.multiselect('보고 싶은 수치',all_features,['팔로워 수', '참여도'])
-            
-            # period =  st.selectbox('증감 비교 일수', options = range(1,  source["날짜"].nunique()), disabled = all('증감' not in f for f in target_features))
+            target_features = st.multiselect('보고 싶은 수치',all_features,['팔로워 수', '참여도'])        
         
         with col3:
             plot_type = st.multiselect('차트 종류', options = ['라인', '바'], default = '라인')
