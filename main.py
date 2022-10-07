@@ -61,6 +61,15 @@ def update_business():
 def on_click():
     del st.session_state.date_range
 
+def click_business(all_business, selected_name):
+    del st.session_state.business_to_compare
+    if st.session_state.all_business:
+        st.session_state.business_to_compare = list(set(all_business) - set([selected_name]))
+        del st.session_state.all_business 
+    elif st.session_state.wba9:
+        st.session_state.business_to_compare = list(set(['winebook_official', 'after9']) - set([selected_name]))
+        del st.session_state.wba9
+
 def main():
     st.set_page_config(
     page_title='WB-A9 인스타그램 현황', layout='wide')
@@ -210,30 +219,29 @@ def main():
         source = df_daily_summary.copy()
         source.columns = translate(source)
         col1, col2, col3, col4 = st.columns(4)
-        
-        
-        
+   
         all_features =  source.select_dtypes('number').drop(columns = 'id').columns
-        buttons = [st.button('전체'),st.button('Winebook & After9')]
+        
         source = summarizer.get_summaries(summary_func = ['diff', 'pct_change'], periods = [period], fillna = False)
         source.columns = translate(source.columns)
+
         with col1:
-            
+            # buttons = [st.button('전체'),]
             if ("business_to_compare" not in st.session_state):        
                     default_business = []
-            elif buttons[1]:
-                default_business = set(['winebook_official', 'after9']) - set([selected_name])
-            elif buttons[0]:
-                    default_business = set(all_business) - set([selected_name])
             else:
                 default_business = st.session_state.business_to_compare
-            business_to_compare = st.multiselect('비교 계정 선택', set(all_business) - set([selected_name]), default_business, key = 'business_to_compare')            
-            selected_business = [selected_name] + business_to_compare
+            business_to_compare = st.multiselect('비교 계정 선택', set(all_business) - set([selected_name]), default_business, key = 'business_to_compare') 
+            selected_business = [selected_name] + business_to_compare           
+            st.button('전체', key = 'all_business', on_click = click_business, args = (all_business, selected_name))
+            st.button('Winebook & After9', key = 'wba9', on_click = click_business, args = (all_business, selected_name))
+
         with col2:
             target_features = st.multiselect('보고 싶은 수치',all_features,['팔로워 수', '참여도'])        
         
         with col3:
             plot_type = st.multiselect('차트 종류', options = ['라인', '바'], default = '라인')
+
         with col4:
             if 'date_range' not in st.session_state:
                 default_range = (all_date.min(), all_date.max())
