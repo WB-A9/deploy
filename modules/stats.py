@@ -1,9 +1,12 @@
 class Summary():
     def __init__(self, df):
         self.df = df
+        self.df['rank'] = self.df.groupby(['date'])['followers_count'].rank(ascending = False).astype(int)
         self.df_summary = {'diff' : dict(), 'pct_change' : dict()}
+        self._calc_engage_rate()
         for a, b in [('like', 'media'), ('comments', 'media')]:
             self._calc_ab_ratio(a, b)
+            
 
     def get_summaries(self, summary_func:iter = ['diff'], periods:iter = [1], fillna = False):
         df_summaries = self.df.copy()
@@ -20,7 +23,7 @@ class Summary():
             defined_func = lambda x: x.diff(periods)
         elif summary_func == 'pct_change':
             defined_func = lambda x: x.pct_change(periods) * 100
-        df_summary = self.df.groupby('name')[[c for c in self.df.columns if ('count' in c) or ('ratio' in c)]].transform(defined_func)
+        df_summary = self.df.groupby('name')[[c for c in self.df.columns if ('count' in c) or ('ratio' in c) or (c == 'rank') or ('rate' in c)]].transform(defined_func)
         df_summary.columns = [c.split('_count')[0] + f'_{summary_func}' for c in df_summary.columns]
         if fillna:
             df_summary = df_summary.fillna(0)
@@ -28,3 +31,6 @@ class Summary():
 
     def _calc_ab_ratio(self, a, b):
         self.df[f'{a}_{b}_ratio'] = self.df[f'{a}_count'] / self.df[f'{b}_count']
+
+    def _calc_engage_rate(self):
+        self.df['engagementrate'] = 100 * (self.df['like_count'] + self.df['comments_count']) / self.df['followers_count']
