@@ -213,7 +213,7 @@ def main():
         
 
     with tab2:
-        st.subheader(f'📈기간 내 추이')
+        st.subheader(f'📈[{selected_name}] 기간 내 추이')
         
         
         source = df_daily_summary.copy()
