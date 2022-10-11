@@ -26,7 +26,7 @@ class Summary():
         df_summary = self.df.groupby('name')[[c for c in self.df.columns if ('count' in c) or ('ratio' in c) or (c == 'rank') or ('rate' in c)]].transform(defined_func)
         df_summary.columns = [c.split('_count')[0] + f'_{summary_func}' for c in df_summary.columns]
         if 'rank_diff' in df_summary.columns:
-            df_summary['rank_diff'] = -df_summary['rank_diff']
+            df_summary.loc[df_summary['rank_diff'] != 0, 'rank_diff'] *= -1
         if fillna:
             df_summary = df_summary.fillna(0)
         self.df_summary[summary_func][periods] = df_summary
