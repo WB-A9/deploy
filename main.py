@@ -6,27 +6,13 @@ import altair as alt
 import plotly.express as px
 import plotly.io as pio
 from modules.stats import Summary
+from modules.text import st_header, translate, inc_dec, date_format
 import plotly.graph_objects as go
+from datetime import datetime, timedelta
+import os
+
 
 pio.templates.default = "simple_white"
-
-def translate(columns):
-    trans_dict = {'rank': '순위', 'name': '이름', 'followers' : '팔로워', 'follows': '팔로우', 'media': '게시물', 'like': '좋아요', 'comments': '댓글', 'diff': '증감(수)', 'pct_change': '증감(%)', 'count': '수', 'ratio': '당', 'date': '날짜', 'engagementrate': '참여도'}
-    trans_cols = []
-    for name in columns:
-        trans_words = ''
-        if 'pct_change' in name:
-            splitted = name.split('_pct_change')[0].split('_') + ['pct_change']
-        else:
-            splitted = name.split('_')
-        if 'ratio' in splitted:
-            splitted.insert(2, splitted.pop(0))
-        for word in splitted:
-            if trans_dict.get(word):
-                word = trans_dict[word]
-            trans_words += word + ' '
-        trans_cols.append(trans_words.strip())
-    return trans_cols
 
 def aggrid_interactive_table(df: pd.DataFrame):
     """Creates an st-aggrid interactive table based on a dataframe.
@@ -95,7 +81,7 @@ def main():
     df_daily_summary = summarizer.get_summaries(summary_func=['diff', 'pct_change'], periods = [period])
     df_latest = df_daily_summary.loc[df_daily_summary['date'] == up_to_date].reset_index(drop = True)    
     df_latest.columns = translate(df_latest.columns)
-    up_to_date = up_to_date.strftime('%Y년 %m월 %d일')
+    up_to_date = date_format(up_to_date)
     
     with tab1:
         st.subheader('🍷와인 인플루언서 Instagram 현황🥂')
@@ -190,7 +176,7 @@ def main():
                 
                 with cols[c]:
                     with st.container():
-                        media_time = selected_media[view_index + c]['timestamp'].strftime("%Y년 %m월 %d일")
+                        media_time = date_format(selected_media[view_index + c]['timestamp'])
                         st.caption(media_time)
                         media_url = selected_media[view_index + c]['media_url']
                         if pd.isnull(media_url):
@@ -226,7 +212,6 @@ def main():
         source.columns = translate(source.columns)
 
         with col1:
-            # buttons = [st.button('전체'),]
             if ("business_to_compare" not in st.session_state):        
                     default_business = []
             else:
@@ -289,14 +274,124 @@ def main():
                 fig.update_xaxes(rangeslider_visible=True)    
                 st.plotly_chart(fig,use_container_width= True)
         
+
         with tab3:
-            st.subheader('📊분석 리포트')
-            st.write('작성 예정')
+
+            report_business = 'winebook_official'
+            report_start = pd.to_datetime('2022-10-10 12:00')
+            current_time = pd.to_datetime(datetime.now())
+
+            report_period = pd.date_range(start = report_start, end = current_time, freq = '7D')
+
+            report_date = st.selectbox(label = '기준일', options = report_period[::-1], format_func = date_format)
             
-        
-        
-        
-        
+            REPORT_DATA_BASE = 'data/report'
+            w_summary_data_path = f"weekly_summary_{date_format(report_date, format = '')}.csv"
+            w_media_data_path = f"weekly_media_{date_format(report_date, format = '')}.csv"
+            if os.path.exists(os.path.join(REPORT_DATA_BASE, w_summary_data_path)):
+                df_weekly_summary = pd.read_csv(os.path.join(REPORT_DATA_BASE, w_summary_data_path))
+                df_weekly_summary['날짜'] = pd.to_datetime(df_weekly_summary['날짜'])    
+            else: 
+                df_weekly_summary = summarizer.get_summaries(summary_func=['diff', 'pct_change'], periods = [7])
+                df_weekly_summary.columns = translate(df_weekly_summary.columns)
+                df_weekly_summary.to_csv(os.path.join(REPORT_DATA_BASE, w_summary_data_path), index = False)
+            if os.path.exists(os.path.join(REPORT_DATA_BASE, w_media_data_path)):
+                weekly_media = pd.read_csv(os.path.join(REPORT_DATA_BASE, w_media_data_path))
+                weekly_media['timestamp'] = pd.to_datetime(weekly_media['timestamp']) 
+                weekly_media['date'] = pd.to_datetime(weekly_media['date']) 
+            else:
+                last_report_date = pd.to_datetime(report_date - timedelta(days = 7))
+                weekly_media = media.copy().loc[media['timestamp'].between(date_format(last_report_date, format = '-'), date_format(report_date, format = '-')) & (media['name'] == 'winebook_official')]
+                weekly_media['engagement'] = weekly_media['like_count'] + weekly_media['like_count']
+                weekly_media.to_csv(os.path.join(REPORT_DATA_BASE, w_media_data_path), index = False)
+            
+            st.write()
+            df_plot_weekly = df_weekly_summary[df_weekly_summary['날짜'].dt.dayofweek == report_date.dayofweek]
+            df_plot_weekly['날짜'] = date_format(df_plot_weekly['날짜'])
+            col1, col2 = st.columns([0.8, 0.2])
+            with col1:
+                st_header(report_business, num = 2)
+                st_header(f'{date_format(report_date)}자 주간 보고서', num = 3)
+
+            with col2:
+                st.image(url)
+                
+            with st.container():
+                st_header('1. 팔로워 수', num = 5)
+            
+                largest_inc = df_weekly_summary.loc[date_format(df_weekly_summary['날짜']) == date_format(report_date)].nlargest(1, '팔로워 증감(수)')['이름'].values[0]
+                smallest_inc = df_weekly_summary.loc[date_format(df_weekly_summary['날짜']) == date_format(report_date)].nsmallest(1, '팔로워 증감(수)')['이름'].values[0]
+                
+                business_to_report = [report_business, largest_inc, smallest_inc]
+                metric_header = ['본 계정', 'Weekly Best', 'Weekly Worst']
+                cols = st.columns([0.5, 0.15, 0.35])
+                for b_idx in range(len(business_to_report)):
+                    business = business_to_report[b_idx]
+                    report_data = df_weekly_summary.loc[(date_format(df_weekly_summary['날짜']) == date_format(report_date)) & (df_weekly_summary['이름'] == business)].to_dict('records')[0]
+                    with cols[b_idx]:
+                        st_header(metric_header[b_idx], num = 6)
+                        st.metric(f'{business}', value = f"{report_data['팔로워 수']}명", delta = f"{report_data['팔로워 증감(수)']:.0f}명({report_data['팔로워 증감(%)']:.2f}%)")
+                    # st.markdown(f'''<**{report_data['이름']}**>의 {'팔로워 수'}({report_data['팔로워 수']:.0f}명)는 전주 대비 **{abs(report_data['followers_diff']):.0f}명({abs(report_data['followers_pct_change']):.2f}%)** {inc_dec(report_data['followers_diff'])}''')
+                
+                st.plotly_chart(px.line(data_frame = df_plot_weekly.loc[df_plot_weekly['이름'].isin(business_to_report)], x = '날짜', y = '팔로워 수', line_group = '이름', markers = True, color = '이름', title = '팔로워 수', hover_data = ['이름','날짜','팔로워 수']))
+
+            
+            with st.container():
+                st_header('2. 참여도', num = 5)
+            
+                largest_inc = df_weekly_summary.loc[date_format(df_weekly_summary['날짜']) == date_format(report_date)].nlargest(1, '참여도 증감(수)')['이름'].values[0]
+                smallest_inc = df_weekly_summary.loc[date_format(df_weekly_summary['날짜']) == date_format(report_date)].nsmallest(1, '참여도 증감(수)')['이름'].values[0]
+                
+                business_to_report = [report_business, largest_inc, smallest_inc]
+                cols = st.columns([0.5, 0.15, 0.35])
+                for b_idx in range(len(business_to_report)):
+                    business = business_to_report[b_idx]
+                    report_data = df_weekly_summary.loc[(date_format(df_weekly_summary['날짜']) == date_format(report_date)) & (df_weekly_summary['이름'] == business)].to_dict('records')[0]
+                    with cols[b_idx]:
+                        st_header(metric_header[b_idx], num = 6)
+                        st.metric(f'{business}', value = f"{report_data['참여도']:.2f}%", delta = f"{report_data['참여도 증감(수)']:.2f}pp({report_data['참여도 증감(%)']:.2f}%)")
+                    
+                
+                st.plotly_chart(px.line(data_frame = df_plot_weekly.loc[df_plot_weekly['이름'].isin(business_to_report)], x = '날짜', y = '참여도', line_group = '이름', markers = True, color = '이름', title = '팔로워 수', hover_data = ['이름','날짜','참여도']))
+            
+            er_top5 = weekly_media.nlargest(5, 'engagement')
+            with st.expander('주간 Top5 게시물'):
+
+                for c in ['timestamp', 'date']:
+                    er_top5[c] = pd.to_datetime(er_top5[c])
+                
+                er_top5 = er_top5.reset_index(drop = True).T.to_dict()
+
+                cols = st.columns(5)
+                for c in range(5):
+                    
+                    with cols[c]:
+                        with st.container():
+                            st_header(f'{c+1}위', num = 6)
+                            media_time = date_format(er_top5[c]['timestamp'])
+                            st.caption(media_time)
+                            media_url = er_top5[c]['media_url']
+                            if pd.isnull(media_url):
+                                media_url = 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/ac/No_image_available.svg/1024px-No_image_available.svg.png'
+                            if er_top5[c]['media_type'] == 'VIDEO':
+                                st.video(media_url)
+                            else:
+                                st.image(media_url)
+                            st.markdown(f'''
+                            ❤️ {er_top5[c]['like_count']}
+                            💬 {er_top5[c]['comments_count']}
+                            ''')
+                            st.caption(er_top5[c]['caption'])
+                            
+                        st.markdown(f'''
+                        
+                        [🔗 게시물로]({er_top5[c]['permalink']})
+                        
+                        ''')
+                    
+            
+            
+
 
 main()
 
