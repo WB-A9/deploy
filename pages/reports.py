@@ -106,39 +106,39 @@ def main():
         
         st.plotly_chart(px.line(data_frame = df_plot_weekly.loc[df_plot_weekly['이름'].isin(business_to_report)], x = '날짜', y = '참여도', line_group = '이름', markers = True, color = '이름', title = '팔로워 수', hover_data = ['이름','날짜','참여도']),
         use_container_width=True)
-            
-    er_top5 = weekly_media.nlargest(5, 'engagement')
-    with st.expander('주간 Top5 게시물'):
+
+    er_top3 = weekly_media.nlargest(3, 'engagement')
+    with st.expander('주간 Top3 게시물'):
 
         for c in ['timestamp', 'date']:
-            er_top5[c] = pd.to_datetime(er_top5[c])
+            er_top3[c] = pd.to_datetime(er_top3[c])
         
-        er_top5 = er_top5.reset_index(drop = True).T.to_dict()
+        er_top3 = er_top3.reset_index(drop = True).T.to_dict()
 
-        cols = st.columns(5)
-        for c in range(5):
+        cols = st.columns(3)
+        for c in range(3):
             
             with cols[c]:
                 with st.container():
                     st_header(f'{c+1}위', num = 6)
-                    media_time = date_format(er_top5[c]['timestamp'])
+                    media_time = date_format(er_top3[c]['timestamp'])
                     st.caption(media_time)
-                    media_url = er_top5[c]['media_url']
+                    media_url = er_top3[c]['media_url']
                     if pd.isnull(media_url):
                         media_url = 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/ac/No_image_available.svg/1024px-No_image_available.svg.png'
-                    if er_top5[c]['media_type'] == 'VIDEO':
+                    if er_top3[c]['media_type'] == 'VIDEO':
                         st.video(media_url)
                     else:
                         st.image(media_url)
                     st.markdown(f'''
-                    ❤️ {er_top5[c]['like_count']}
-                    💬 {er_top5[c]['comments_count']}
+                    ❤️ {er_top3[c]['like_count']}
+                    💬 {er_top3[c]['comments_count']}
                     ''')
-                    st.caption(er_top5[c]['caption'])
+                    st.caption(er_top3[c]['caption'])
                     
                 st.markdown(f'''
                 
-                [🔗 게시물로]({er_top5[c]['permalink']})
+                [🔗 게시물로]({er_top3[c]['permalink']})
                 
                 ''')
             

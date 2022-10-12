@@ -68,7 +68,7 @@ def main():
     all_business = df_daily_summary['name'].unique()
     all_date = pd.to_datetime(df_daily_summary['date'].unique())
     up_to_date = all_date.max()
-    tab1, tab2, tab3 = st.tabs(['현황', '기간 내 추이', '분석 리포트'])
+    tab1, tab2 = st.tabs(['현황', '기간 내 추이'])
     
     period_range = range(1,  df_daily_summary["date"].nunique())
     with st.sidebar:
@@ -271,14 +271,6 @@ def main():
                 fig.update_layout(title = plot_title, xaxis_title= "날짜", yaxis_title= target_feature,)
                 fig.update_xaxes(rangeslider_visible=True)    
                 st.plotly_chart(fig,use_container_width= True)
-        
-
-        with tab3:
-            pass
-
-                    
-        
-            
 
 
 main()
