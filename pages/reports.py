@@ -3,7 +3,7 @@ import pandas as pd
 import plotly.express as px
 import plotly.io as pio
 from modules.stats import Summary
-from modules.text import st_header, translate, date_format
+from modules.text import st_header, translate, date_format, get_week_num
 from datetime import datetime, timedelta
 import os
 
@@ -21,13 +21,18 @@ def main():
     st.set_page_config(layout='centered')
     
     
-    report_start = pd.to_datetime('2022-10-10 12:00')
+    report_init = pd.to_datetime('2022-10-03 12:00')
+    
     current_time = pd.to_datetime(datetime.now())
 
-    report_period = pd.date_range(start = report_start, end = current_time, freq = '7D')
+    report_period = pd.date_range(start = report_init, end = current_time - timedelta(days = 7), freq = '7D')
+    
     with st.sidebar:
         target_business = st.selectbox('분석 계정', options = ['winebook_official', 'after9'])
-        report_date = st.selectbox(label = '기준일', options = report_period[::-1], format_func = date_format)
+        report_start = st.selectbox(label = '주차', options = report_period[::-1], format_func = get_week_num)
+        report_end = pd.to_datetime(report_start + timedelta(days = 6))
+        report_date = pd.to_datetime(report_start + timedelta(days = 7))
+        
         
     
     REPORT_DATA_BASE = 'data/report'
@@ -50,8 +55,7 @@ def main():
         weekly_media['date'] = pd.to_datetime(weekly_media['date']) 
     else:
         media = pd.read_csv("data/updated_media.csv")
-        last_report_date = pd.to_datetime(report_date - timedelta(days = 7))
-        weekly_media = media.copy().loc[media['timestamp'].between(date_format(last_report_date, format = '-'), date_format(report_date, format = '-'))]
+        weekly_media = media.copy().loc[media['timestamp'].between(date_format(report_start, format = '-'), date_format(report_end, format = '-'))]
         weekly_media['engagement'] = weekly_media['like_count'] + weekly_media['like_count']
         weekly_media.to_csv(os.path.join(REPORT_DATA_BASE, w_media_data_path), index = False)
     
@@ -63,13 +67,17 @@ def main():
     col1, col2 = st.columns([0.8, 0.2])
     with col1:
         st_header(target_business, num = 2)
-        st_header(f'{date_format(report_date)}자 주간 보고서', num = 3)
+        st_header(f'{get_week_num(report_start)} 주간 보고서', num = 3)
+        st.caption(f'분석 기간: {date_format(report_start)} ~ {date_format(report_end)}')
+        st.caption(f'작성일: {date_format(report_date)} 월요일' )
+        
 
     with col2:
         
         url = df_weekly_summary.sort_values('날짜', ascending = False).loc[df_weekly_summary['이름'] == target_business, 'profile picture url'].unique()[0]
         st.image(url)
-        
+
+    st_header('', num = 1)        
     with st.container():
         st_header('1. 팔로워 수', num = 5)
     

@@ -43,3 +43,14 @@ def date_format(datetime, format = 'kor'):
         return datetime.dt.strftime(strf)
     else:
         return datetime.strftime(strf)
+
+def get_week_num(date, ref_weekday = 0):
+    target_day = pd.to_datetime(date)
+    year = target_day.year
+    month = target_day.month
+    first_day = pd.to_datetime(f'{year}-{month}')
+    n = 0
+    for day in pd.date_range(start = first_day, end = target_day):
+        if day.day_of_week == ref_weekday:
+            n += 1
+    return f'{year}년 {month}월 {n}주차'
