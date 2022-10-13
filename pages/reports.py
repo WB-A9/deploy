@@ -124,7 +124,7 @@ def main():
 
         
         media_type_stat['게시물 당 참여'] = media_type_stat['게시물 당 좋아요'] + media_type_stat['게시물 당 댓글']
-        st.write(media_type_stat)
+        
         feaure_to_plot = ['게시물 수', '게시물 당 좋아요', '게시물 당 댓글', '게시물 당 참여']
         cols = st.columns(2)
         for c in range(len(feaure_to_plot)):
