@@ -104,7 +104,7 @@ def main():
                 st.metric(f'{business}', value = f"{report_data['참여도']:.2f}%", delta = f"{report_data['참여도 증감(수)']:.2f}pp({report_data['참여도 증감(%)']:.2f}%)")
             
         
-        st.plotly_chart(px.line(data_frame = df_plot_weekly.loc[df_plot_weekly['이름'].isin(business_to_report)], x = '날짜', y = '참여도', line_group = '이름', markers = True, color = '이름', title = '팔로워 수', hover_data = ['이름','날짜','참여도']),
+        st.plotly_chart(px.line(data_frame = df_plot_weekly.loc[df_plot_weekly['이름'].isin(business_to_report)], x = '날짜', y = '참여도', line_group = '이름', markers = True, color = '이름', title = '참여도', hover_data = ['이름','날짜','참여도']),
         use_container_width=True)
 
     er_top3 = weekly_media.nlargest(3, 'engagement')
