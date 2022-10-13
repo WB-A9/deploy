@@ -13,10 +13,12 @@ def inc_dec(number):
         text = '로 변동이 없었습니다.'
     return text
 
-def translate(columns):
-    trans_dict = {'rank': '순위', 'name': '이름', 'followers' : '팔로워', 'follows': '팔로우', 'media': '게시물', 'like': '좋아요', 'comments': '댓글', 'diff': '증감(수)', 'pct_change': '증감(%)', 'count': '수', 'ratio': '당', 'date': '날짜', 'engagementrate': '참여도'}
-    trans_cols = []
-    for name in columns:
+def translate(column_or_index):
+    trans_dict = {'rank': '순위', 'name': '이름', 'followers' : '팔로워', 'follows': '팔로우', 'media': '게시물', 'like': '좋아요', 'comments': '댓글', 'diff': '증감(수)', 'pct_change': '증감(%)', 'count': '수', 'ratio': '당', 'date': '날짜', 'engagementrate': '참여도',
+    'carousel': '캐러셀', 'album': '앨범', 'image': '이미지', 'video': '영상', 'engagement': '참여 수', 'type': '종류'}
+    trans_names = []
+    for name in column_or_index:
+        name = name.lower()
         trans_words = ''
         if 'pct_change' in name:
             splitted = name.split('_pct_change')[0].split('_') + ['pct_change']
@@ -28,8 +30,8 @@ def translate(columns):
             if trans_dict.get(word):
                 word = trans_dict[word]
             trans_words += word + ' '
-        trans_cols.append(trans_words.strip())
-    return trans_cols
+        trans_names.append(trans_words.strip())
+    return trans_names
 
 def date_format(datetime, format = 'kor'):
     if format == 'kor':

@@ -5,7 +5,7 @@ class Summary():
         self.df_summary = {'diff' : dict(), 'pct_change' : dict()}
         self._calc_engage_rate()
         for a, b in [('like', 'media'), ('comments', 'media')]:
-            self._calc_ab_ratio(a, b)
+            self.df = Summary.calc_ab_ratio(self.df, a, b)
             
 
     def get_summaries(self, summary_func:iter = ['diff'], periods:iter = [1], fillna = False):
@@ -30,9 +30,13 @@ class Summary():
         if fillna:
             df_summary = df_summary.fillna(0)
         self.df_summary[summary_func][periods] = df_summary
-
-    def _calc_ab_ratio(self, a, b):
-        self.df[f'{a}_{b}_ratio'] = self.df[f'{a}_count'] / self.df[f'{b}_count']
-
+    
     def _calc_engage_rate(self):
         self.df['engagementrate'] = 100 * (self.df['like_count'] + self.df['comments_count']) / self.df['followers_count']
+    
+    @staticmethod
+    def calc_ab_ratio(df, a, b):
+        df[f'{a}_{b}_ratio'] = df[f'{a}_count'] / df[f'{b}_count']
+        return df
+    
+    
