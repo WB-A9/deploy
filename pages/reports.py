@@ -20,7 +20,7 @@ pio.templates.default = "simple_white"
 
 def main():
     
-    report_init = pd.to_datetime('2022-10-03 12:00')
+    report_init = pd.to_datetime('2022-10-03 12:00 +09:00', utc = True)
     
     current_time = pd.to_datetime(datetime.now())
 
