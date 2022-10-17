@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+from datetime import datetime, timezone, timedelta
 
 def st_header(text:str, num = 1):
     return st.markdown(f"{'#' * num} {text}")
@@ -45,10 +46,11 @@ def date_format(datetime, format = 'kor'):
         return datetime.strftime(strf)
 
 def get_week_num(date, ref_weekday = 0):
+
     target_day = pd.to_datetime(date)
     year = target_day.year
     month = target_day.month
-    first_day = pd.to_datetime(f'{year}-{month}')
+    first_day = pd.to_datetime(datetime(year, month, 1, tzinfo = timezone(timedelta(hours = 9))))
     n = 0
     for day in pd.date_range(start = first_day, end = target_day):
         if day.day_of_week == ref_weekday:

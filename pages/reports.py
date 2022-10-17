@@ -4,7 +4,7 @@ import plotly.express as px
 import plotly.io as pio
 from modules.stats import Summary
 from modules.text import show_glossary, st_header, translate, date_format, get_week_num
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import os
 from modules.authentification import check_password, signout
 
@@ -20,9 +20,9 @@ pio.templates.default = "simple_white"
 
 def main():
     
-    report_init = pd.to_datetime('2022-10-03 12:00 +09:00', utc = True)
+    report_init = pd.to_datetime(datetime(2022, 10, 3, 12, 0, tzinfo = timezone(timedelta(hours = 9))))
     
-    current_time = pd.to_datetime(datetime.now())
+    current_time = pd.to_datetime(datetime.now(tz = timezone(timedelta(hours=9))))
 
     report_period = pd.date_range(start = report_init, end = current_time - timedelta(days = 7), freq = '7D')
     
