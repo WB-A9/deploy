@@ -54,3 +54,35 @@ def get_week_num(date, ref_weekday = 0):
         if day.day_of_week == ref_weekday:
             n += 1
     return f'{year}년 {month}월 {n}주차'
+
+def show_glossary():
+    content = '''
+    ##### 1. 기본 수치
+    ###### 1) 순위 rank
+    집계하는 전체 계정의 일간 팔로워 수 내림차순
+    ###### 2) 팔로워 followers count
+    해당 계정을 팔로우 하는 계정 수
+    ###### 3) 팔로우 follows count
+    해당 계정이 팔로우 하는 계정 수
+    ###### 4) 게시물 수 media count
+    해당 계정의 게시물 수
+    ###### 5) 좋아요 수 like count
+    게시물에 달린 좋아요 수 합계
+    ###### 6) 댓글 수 comments count
+    게시물에 달린 댓글 수 합계
+    ###### 7) 참여 engagement
+    좋아요 수와 댓글 수의 합계
+    
+    ##### 2. 복합 수치
+    ###### 1) 증감(수)
+    기준일 대비 수치 변화량
+    ###### 2) 증감(%)
+    기준일 대비 수치 변화량의 백분율(100 * 증감(수) / 기준일 수치)
+    ###### 3) 참여도 engagement rate
+    팔로워 수 대비 참여 백분율(100 * 참여 / 팔로워 수)
+    ###### 4) 게시물 당 OO OO-media count ratio
+    게시물 하나 당 OO 수(OO 수 / 게시물 수)
+    '''
+    st.markdown(content)
+    
+        

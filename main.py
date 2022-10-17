@@ -6,7 +6,7 @@ import altair as alt
 import plotly.express as px
 import plotly.io as pio
 from modules.stats import Summary
-from modules.text import st_header, translate, date_format
+from modules.text import show_glossary, translate, date_format
 import plotly.graph_objects as go
 
 
@@ -55,8 +55,6 @@ def click_business(all_business, selected_name):
         del st.session_state.wba9
 
 def main():
-    st.set_page_config(
-    page_title='WB-A9 인스타그램 현황', layout='wide')
     
     daily_summary = pd.read_csv('data/df_daily_summary.csv')
     media = pd.read_csv('data/updated_media.csv')
@@ -66,9 +64,10 @@ def main():
     summarizer = Summary(df_daily_summary.sort_values('date'))
     n_business = df_daily_summary['name'].nunique()
     all_business = df_daily_summary['name'].unique()
+    business_colormap = dict(zip(all_business, ['#f7b32b', '#08605f', '#8e4162', '#b3cdd1', '#c7f0bd', '#bbe5ed', '#9f4a54', '#fff07c', '#ff7f11', '#ff1b1c', '#edc9ff', '#f2b79f', '#0c6291', '#231123']))
     all_date = pd.to_datetime(df_daily_summary['date'].unique())
     up_to_date = all_date.max()
-    tab1, tab2 = st.tabs(['현황', '기간 내 추이'])
+    tab1, tab2, tab3 = st.tabs(['현황', '기간 내 추이', '용어 사전'])
     
     period_range = range(1,  df_daily_summary["date"].nunique())
     with st.sidebar:
@@ -112,8 +111,8 @@ def main():
         with col4:
             with st.container():         
                 st.metric(f'🏅 순위', value = f"{selected['순위']}위", delta= f"{selected['순위 증감(수)']:.0f}위", help = f'전체 {n_business}개 계정의 팔로워 수 기준')
-                st.metric(f"👥 팔로워 수", value = f"{selected['팔로워 수']}명", delta = f"{selected['팔로워 증감(수)']:.0f}명({selected['팔로워 증감(%)']:.2f}%)", help = '본 계정을 팔로우 하는 계정 수')
-                st.metric(f"🤝 팔로우 수", value = f"{selected['팔로우 수']}명", delta = f"{selected['팔로우 증감(수)']:.0f}명({selected['팔로우 증감(%)']:.2f}%)", help = '본 계정이 팔로우 하는 계정 수')
+                st.metric(f"👥 팔로워 수", value = f"{selected['팔로워 수']}명", delta = f"{selected['팔로워 증감(수)']:.0f}명({selected['팔로워 증감(%)']:.2f}%)", help = '해당 계정을 팔로우 하는 계정 수')
+                st.metric(f"🤝 팔로우 수", value = f"{selected['팔로우 수']}명", delta = f"{selected['팔로우 증감(수)']:.0f}명({selected['팔로우 증감(%)']:.2f}%)", help = '해당 계정이 팔로우 하는 계정 수')
                 st.metric(f"📷 게시물 수", value = f"{selected['게시물 수']}개", delta = f"{selected['게시물 증감(수)']:.0f}개({selected['게시물 증감(%)']:.2f}%)", help = '전체 게시물 수')
         with col5:
             with st.container():
@@ -272,6 +271,11 @@ def main():
                 fig.update_xaxes(rangeslider_visible=True)    
                 st.plotly_chart(fig,use_container_width= True)
 
+    with tab3:
+        show_glossary()
+    
+st.set_page_config(
+    page_title='WB-A9 인스타그램 현황', layout='wide')
 
 main()
 
