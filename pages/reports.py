@@ -7,14 +7,14 @@ from modules.text import show_glossary, st_header, translate, date_format, get_w
 from datetime import datetime, timedelta, timezone
 import os
 from modules.authentification import check_password, signout
+from modules.design import Bar
 
 pio.templates.default = "simple_white"
 
 # 그니까
 # 1. 팔로워 수 / 참여도 증가가 가장 큰 업체
 # 2. -> 어떤 게시물이 터졌는지(참여도 증감) -> 행사/이벤트, 특정 게시물 타입?
-# 3. 게시물 내용 분석(게시물 카테고리 분류 / 미디어 타입 / 해시태그)
-# https://blog.hootsuite.com/calculate-engagement-rate/
+# 3. 게시물 내용 분석(게시물 카테고리 분류 / 미디어 타입 / 해시태그)# https://blog.hootsuite.com/calculate-engagement-rate/
 # 4. 업체 동향 (게시물 게시 속도, 늘고 있는지? / 활동 없는지)
 
 
@@ -97,16 +97,12 @@ def main():
                     st.metric(f'{business}', value = f"{report_data['팔로워 수']}명", delta = f"{report_data['팔로워 증감(수)']:.0f}명({report_data['팔로워 증감(%)']:.2f}%)")
                 # st.markdown(f'''<**{report_data['이름']}**>의 {'팔로워 수'}({report_data['팔로워 수']:.0f}명)는 전주 대비 **{abs(report_data['followers_diff']):.0f}명({abs(report_data['followers_pct_change']):.2f}%)** {inc_dec(report_data['followers_diff'])}''')
             
-            fig = px.bar(data_frame = df_plot_weekly, barmode = 'group', text = '이름', x = '날짜', y = '팔로워 수' , color = '이름' , title = '팔로워 수', hover_data = ['이름', '팔로워 수', '날짜',], color_discrete_map = business_colormap,  width = 800, opacity =0.7)
-            # fig.update_traces(texttemplate="%{text}<br>%{y:.0f}명", textangle = 0, textposition = 'outside')
-            fig.update_traces(texttemplate="%{text}", textangle = 90, textposition = 'inside')
-            fig.update_layout(uniformtext_minsize=12, uniformtext_mode='hide')
-            
+            fig = Bar(df = df_plot_weekly,  x = '날짜', y = '팔로워 수', group = '이름', colormap = business_colormap , title = '팔로워 수', range_slider = True)
             st.plotly_chart(fig, use_container_width=True)
 
+        
 
-            fig = px.bar(data_frame = df_plot_weekly.loc[df_plot_weekly['날짜'] == date_format(report_date)].sort_values("팔로워 증감(수)"), barmode = 'group', text = '이름', y = '날짜', x = '팔로워 증감(수)' , color = '이름' , title = '전주 대비 팔로워 증감(수)', hover_data = ['이름', '팔로워 수', '날짜',], orientation='h' , color_discrete_map = business_colormap,  )
-            
+            fig = Bar(df = df_plot_weekly.loc[df_plot_weekly['날짜'] == date_format(report_date)].sort_values("팔로워 증감(수)"),  y = '날짜', x = '팔로워 증감(수)', group = '이름', colormap = business_colormap , title = '전주 대비 팔로워 증감(수)')
             st.plotly_chart(fig, use_container_width=False)
 
         
@@ -124,10 +120,12 @@ def main():
                 with cols[b_idx]:
                     st_header(metric_header[b_idx], num = 6)
                     st.metric(f'{business}', value = f"{report_data['참여도']:.2f}%", delta = f"{report_data['참여도 증감(수)']:.2f}pp({report_data['참여도 증감(%)']:.2f}%)")
-                
             
-            st.plotly_chart(px.bar(data_frame = df_plot_weekly.loc[df_plot_weekly['날짜'] == date_format(report_date)].sort_values("참여도 증감(%)"), barmode = 'group', text_auto = '.2f', y = '날짜', x = '참여도 증감(%)', color = '이름', title = '전주 대비 참여도 증감(%)', hover_data = ['이름','날짜','참여도'], color_discrete_map = business_colormap, orientation= 'h' ),
-            use_container_width= False)
+            fig = Bar(df = df_plot_weekly,  x = '날짜', y = '참여도', group = '이름', colormap = business_colormap , title = '참여도', range_slider = True)
+            st.plotly_chart(fig, use_container_width=True)
+
+            fig = Bar(df = df_plot_weekly.loc[df_plot_weekly['날짜'] == date_format(report_date)].sort_values("참여도 증감(%)"),  y = '날짜', x = '참여도 증감(%)', text_auto = '.2f',  group = '이름', colormap = business_colormap , title = '전주 대비 참여도 증감(%)')
+            st.plotly_chart(fig, use_container_width=False)
 
         with st.container():
             st_header('3. 게시물 분석', num = 5)
