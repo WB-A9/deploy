@@ -98,9 +98,8 @@ def main():
                 # st.markdown(f'''<**{report_data['이름']}**>의 {'팔로워 수'}({report_data['팔로워 수']:.0f}명)는 전주 대비 **{abs(report_data['followers_diff']):.0f}명({abs(report_data['followers_pct_change']):.2f}%)** {inc_dec(report_data['followers_diff'])}''')
             
             fig = Bar(df = df_plot_weekly,  x = '날짜', y = '팔로워 수', group = '이름', colormap = business_colormap , title = '팔로워 수', range_slider = True)
+            fig.update_traces(visible = 'legendonly', selector = ({'name': 'Wine Folly'}))
             st.plotly_chart(fig, use_container_width=True)
-
-        
 
             fig = Bar(df = df_plot_weekly.loc[df_plot_weekly['날짜'] == date_format(report_date)].sort_values("팔로워 증감(수)"),  y = '날짜', x = '팔로워 증감(수)', group = '이름', colormap = business_colormap , title = '전주 대비 팔로워 증감(수)')
             st.plotly_chart(fig, use_container_width=False)
