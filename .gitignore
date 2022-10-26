@@ -3,3 +3,4 @@
 __pycache__
 .streamlit
 pages/test.py
+.streamlit/
