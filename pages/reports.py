@@ -190,7 +190,7 @@ def main():
                 st.write('지난 주 게시물이 없었습니다.')
             
             st.markdown('---')
-            signout()
+#             signout()
     with tab2:
         show_glossary()
                     
@@ -200,6 +200,6 @@ def main():
 
 st.set_page_config(layout='centered')
 
-if check_password():
-    main()
+# if check_password():
+main()
     
