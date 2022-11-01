@@ -11,13 +11,6 @@ from modules.design import Bar
 
 pio.templates.default = "simple_white"
 
-# 그니까
-# 1. 팔로워 수 / 참여도 증가가 가장 큰 업체
-# 2. -> 어떤 게시물이 터졌는지(참여도 증감) -> 행사/이벤트, 특정 게시물 타입?
-# 3. 게시물 내용 분석(게시물 카테고리 분류 / 미디어 타입 / 해시태그)# https://blog.hootsuite.com/calculate-engagement-rate/
-# 4. 업체 동향 (게시물 게시 속도, 늘고 있는지? / 활동 없는지)
-
-
 def main():
     
     report_init = pd.to_datetime(datetime(2022, 10, 3, 12, 0, tzinfo = timezone(timedelta(hours = 9))))
@@ -29,8 +22,9 @@ def main():
     with st.sidebar:
         target_business = st.selectbox('분석 계정', options = ['winebook_official', 'after9'])
         report_start = st.selectbox(label = '주차', options = report_period[::-1], format_func = get_week_num)
-        report_end = pd.to_datetime(report_start + timedelta(days = 6))
-        report_date = pd.to_datetime(report_start + timedelta(days = 7))
+        report_end = pd.to_datetime(report_start + timedelta(days = 7))
+        report_date = report_end
+        # report_date = pd.to_datetime(report_end + timedelta(days = 0))
         
         
     
@@ -59,7 +53,9 @@ def main():
         weekly_media.to_csv(os.path.join(REPORT_DATA_BASE, w_media_data_path), index = False)
     
     
-    df_plot_weekly = df_weekly_summary[df_weekly_summary['날짜'].dt.dayofweek == report_date.dayofweek]
+    df_plot_weekly = df_weekly_summary[(df_weekly_summary['날짜'].dt.dayofweek == report_date.dayofweek)]
+    
+    # df_plot_weekly = df_weekly_summary[df_weekly_summary['날짜'].dt.dayofweek == report_date.dayofweek]
     df_plot_weekly['날짜'] = date_format(df_plot_weekly['날짜'])
     all_business = sorted(df_weekly_summary['이름'].unique().tolist())
     # business_colormap = dict(zip(all_business, px.colors.qualitative.Alphabet[:len(all_business)+1]))
