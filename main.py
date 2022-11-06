@@ -7,6 +7,7 @@ import plotly.express as px
 import plotly.io as pio
 from modules.stats import Summary
 from modules.text import show_glossary, translate, date_format
+from modules.design import business_colormap
 import plotly.graph_objects as go
 
 
@@ -64,7 +65,7 @@ def main():
     summarizer = Summary(df_daily_summary.sort_values('date'))
     n_business = df_daily_summary['name'].nunique()
     all_business = df_daily_summary['name'].unique()
-    business_colormap = dict(zip(all_business, ['#f7b32b', '#08605f', '#8e4162', '#b3cdd1', '#c7f0bd', '#bbe5ed', '#9f4a54', '#fff07c', '#ff7f11', '#ff1b1c', '#edc9ff', '#f2b79f', '#0c6291', '#231123']))
+    # business_colormap = dict(zip(all_business, ['#f7b32b', '#08605f', '#8e4162', '#b3cdd1', '#c7f0bd', '#bbe5ed', '#9f4a54', '#fff07c', '#ff7f11', '#ff1b1c', '#edc9ff', '#f2b79f', '#0c6291', '#231123']))
     all_date = pd.to_datetime(df_daily_summary['date'].unique())
     up_to_date = all_date.max()
     tab1, tab2, tab3 = st.tabs(['현황', '기간 내 추이', '용어 사전'])
@@ -81,7 +82,7 @@ def main():
     up_to_date = date_format(up_to_date)
     
     with tab1:
-        st.subheader('🍷와인 인플루언서 Instagram 현황🥂')
+        st.subheader('🍷와인 Instagram 현황🥂')
         st.write(f'{up_to_date} 기준')
         col_to_show = ['순위', '이름', '팔로워 수', '팔로우 수', '게시물 수', '좋아요 수', '댓글 수', '게시물 당 좋아요', '게시물 당 댓글', '참여도']
         df_latest_toshow = df_latest.reindex(columns = col_to_show).sort_values('순위')
@@ -257,10 +258,10 @@ def main():
                     text_auto = '.2f'
                 
                 if '라인' in plot_type:
-                    chart.extend(px.line(data_frame = source_to_plot, x = '날짜', y = target_feature, line_group = '이름', markers = True, color = '이름', title = plot_title, hover_data = ['이름','날짜',target_feature]).data
+                    chart.extend(px.line(data_frame = source_to_plot, x = '날짜', y = target_feature, line_group = '이름', markers = True, color = '이름', title = plot_title, hover_data = ['이름','날짜',target_feature], color_discrete_map = business_colormap).data
                     )
                 if '바' in plot_type:
-                    chart.extend(px.bar(data_frame = source_to_plot, x = '날짜', y = target_feature, barmode = 'group', text_auto= text_auto, color = '이름', title = plot_title, hover_data = ['이름','날짜',target_feature], opacity=0.5).data
+                    chart.extend(px.bar(data_frame = source_to_plot, x = '날짜', y = target_feature, barmode = 'group', text_auto= text_auto, color = '이름', title = plot_title, hover_data = ['이름','날짜',target_feature], opacity=0.5, color_discrete_map = business_colormap).data
                 )
             
                 for data in chart:
