@@ -6,8 +6,10 @@ from modules.stats import Summary
 from modules.text import show_glossary, st_header, translate, date_format, get_week_num
 from datetime import datetime, timedelta, timezone
 import os
-from modules.authentification import check_password, signout
+from modules.tools import aggrid_interactive_table, convert_df
 from modules.design import Bar, business_colormap
+# from modules.authentification import check_password, signout
+
 
 pio.templates.default = "simple_white"
 
@@ -58,7 +60,7 @@ def main():
     df_plot_weekly['날짜'] = date_format(df_plot_weekly['날짜'])
     all_business = sorted(df_weekly_summary['이름'].unique().tolist())
     
-    tab1, tab2 = st.tabs(['보고서', '용어 사전'])
+    tab1, tab2, tab3 = st.tabs(['보고서', '데이터 보기', '용어 사전'])
     with tab1:
         col1, col2 = st.columns([0.8, 0.2])
         with col1:
@@ -91,7 +93,7 @@ def main():
                 # st.markdown(f'''<**{report_data['이름']}**>의 {'팔로워 수'}({report_data['팔로워 수']:.0f}명)는 전주 대비 **{abs(report_data['followers_diff']):.0f}명({abs(report_data['followers_pct_change']):.2f}%)** {inc_dec(report_data['followers_diff'])}''')
             
             for feature in ["팔로워 수", "팔로워 증감(수)"]:
-                fig = Bar(df = df_plot_weekly.loc[(df_plot_weekly['날짜'] == date_format(report_date)) | (df_plot_weekly['날짜'] == date_format(report_start))].sort_values(['날짜', feature]),  y = feature, x = '이름', group = '이름', text_auto = True, colormap = business_colormap , title = feature, range_slider = False, barmode = 'relative', facet_col = '날짜')
+                fig = Bar(df = df_plot_weekly.loc[(df_plot_weekly['날짜'] == date_format(report_date)) | (df_plot_weekly['날짜'] == date_format(report_start))].sort_values(['날짜', feature]), text = feature, y = feature, x = '이름', group = '이름', colormap = business_colormap , title = feature, range_slider = False, barmode = 'relative', facet_col = '날짜')
                 fig.update_traces(visible = 'legendonly', selector = ({'name': 'Wine Folly'}))
                 st.plotly_chart(fig, use_container_width=True)
 
@@ -112,7 +114,7 @@ def main():
                     st.metric(f'{business}', value = f"{report_data['참여도']:.2f}%", delta = f"{report_data['참여도 증감(수)']:.2f}pp({report_data['참여도 증감(%)']:.2f}%)")
             
             for feature in ["참여도", "참여도 증감(%)"]:
-                fig = Bar(df = df_plot_weekly.loc[(df_plot_weekly['날짜'] == date_format(report_date)) | (df_plot_weekly['날짜'] == date_format(report_start))].sort_values(['날짜', feature]),  y = feature, x = '이름', group = '이름', text_auto = True, colormap = business_colormap , title = feature, range_slider = False, barmode = 'relative', facet_col = '날짜')
+                fig = Bar(df = df_plot_weekly.loc[(df_plot_weekly['날짜'] == date_format(report_date)) | (df_plot_weekly['날짜'] == date_format(report_start))].sort_values(['날짜', feature]), text = feature, y = feature, x = '이름', group = '이름', colormap = business_colormap , title = feature, range_slider = False, barmode = 'relative', facet_col = '날짜')
                 # fig.update_traces(visible = 'legendonly', selector = ({'name': 'Wine Folly'}))
                 st.plotly_chart(fig, use_container_width=True)
 
@@ -134,7 +136,7 @@ def main():
                 
             
             for feature in ["게시물 수", "게시물 증감(수)"]:
-                fig = Bar(df = df_plot_weekly.loc[(df_plot_weekly['날짜'] == date_format(report_date)) | (df_plot_weekly['날짜'] == date_format(report_start))].sort_values(['날짜', feature]),  y = feature, x = '이름', group = '이름', text_auto = True, colormap = business_colormap , title = feature, range_slider = False, barmode = 'relative', facet_col = '날짜')
+                fig = Bar(df = df_plot_weekly.loc[(df_plot_weekly['날짜'] == date_format(report_date)) | (df_plot_weekly['날짜'] == date_format(report_start))].sort_values(['날짜', feature]), text = feature, y = feature, x = '이름', group = '이름', colormap = business_colormap , title = feature, range_slider = False, barmode = 'relative', facet_col = '날짜')
                 # fig.update_traces(visible = 'legendonly', selector = ({'name': 'Wine Folly'}))
                 st.plotly_chart(fig, use_container_width=True)
 
@@ -191,6 +193,41 @@ def main():
             st.markdown('---')
 #             signout()
     with tab2:
+        
+        summary_to_save = df_weekly_summary.loc[date_format(df_weekly_summary['날짜']) == date_format(report_date),
+        ['순위', '이름', '날짜', '팔로우 수', '팔로워 수', '게시물 수', 
+       '좋아요 수', '댓글 수', '참여도', '게시물 당 좋아요', '게시물 당 댓글', '팔로우 증감(수)', '팔로워 증감(수)', '게시물 증감(수)',
+       '좋아요 증감(수)', '댓글 증감(수)', '순위 증감(수)', '참여도 증감(수)', '게시물 당 좋아요 증감(수)',
+       '게시물 당 댓글 증감(수)', '팔로우 증감(%)', '팔로워 증감(%)', '게시물 증감(%)', '좋아요 증감(%)',
+       '댓글 증감(%)', '순위 증감(%)', '참여도 증감(%)', '게시물 당 좋아요 증감(%)',
+       '게시물 당 댓글 증감(%)']].sort_values('순위').reset_index(drop = True)
+        
+        weekly_media.columns = translate(weekly_media.columns)
+        media_to_save = weekly_media[['이름', '게시물 주소', '게시물 종류', '좋아요 수', '댓글 수', '참여 수', '업로드 시간', '캡션']]
+        
+        st_header('주간 데이터', num = 3)
+
+        with st.expander('요약 데이터'):
+            st.dataframe(summary_to_save)
+            st.download_button(
+                label="저장",
+                data= convert_df(summary_to_save),
+                file_name=f"IG 요약 데이터 {get_week_num(report_end)}.csv",
+                mime='text/csv',
+                )
+            
+
+        with st.expander('미디어 데이터'):
+            st.dataframe(media_to_save)
+            st.download_button(
+                label="저장",
+                data= convert_df(media_to_save),
+                file_name=f"IG 미디어 데이터 {get_week_num(report_end)}.csv",
+                mime='text/csv',
+                )
+            
+     
+    with tab3:
         show_glossary()
                     
 

@@ -1,43 +1,14 @@
 import streamlit as st
 import pandas as pd
-from st_aggrid import AgGrid,GridOptionsBuilder
-from st_aggrid.shared import GridUpdateMode
-import altair as alt
 import plotly.express as px
 import plotly.io as pio
 from modules.stats import Summary
 from modules.text import show_glossary, translate, date_format
 from modules.design import business_colormap
+from modules.tools import aggrid_interactive_table, convert_df
 import plotly.graph_objects as go
 
-
 pio.templates.default = "simple_white"
-
-def aggrid_interactive_table(df: pd.DataFrame):
-    """Creates an st-aggrid interactive table based on a dataframe.
-
-    Args:
-        df (pd.DataFrame]): Source dataframe
-
-    Returns:
-        dict: The selected row
-    """
-    options = GridOptionsBuilder.from_dataframe(
-        df,enableRowGroup=True,enableValue=True,enablePivot=True
-    )
-
-    options.configure_side_bar()
-
-    options.configure_selection("None")
-    
-    selection = AgGrid(
-        df, enable_enterprise_modules=True, gridOptions=options.build(), theme="streamlit", fit_columns_on_grid_load = True, update_mode=GridUpdateMode.MODEL_CHANGED, allow_unsafe_jscode=True)
-
-    return selection
-@st.cache
-def convert_df(df):
-    # IMPORTANT: Cache the conversion to prevent computation on every rerun
-    return df.to_csv().encode('utf-8')
 
 def update_business():
         st.session_state.view_index = 0
@@ -75,6 +46,8 @@ def main():
         
         selected_name = st.selectbox('보고 싶은 계정', all_business, index=3, on_change = update_business)
         period =  st.selectbox('증감 대비 기준', options = period_range, format_func= lambda x: str(x)+'일 전')
+
+        # st.markdown("jihong2jihong@gmail.com")
 
     df_daily_summary = summarizer.get_summaries(summary_func=['diff', 'pct_change'], periods = [period])
     df_latest = df_daily_summary.loc[df_daily_summary['date'] == up_to_date].reset_index(drop = True)    
@@ -122,16 +95,16 @@ def main():
                 st.metric(f"💡 참여도", value = f"{selected['참여도']:.2f}%", delta = f"{selected['참여도 증감(수)']:.0f}pp({selected['참여도 증감(%)']:.2f}%)", help = '참여도 = 100 x (좋아요 수 + 댓글 수) / 팔로워 수')
                     
 
-        with st.expander(label = 'raw data 보기'):
+        with st.expander(label = '테이블 보기'):
             st.write(f'{up_to_date} 기준')
             aggrid_interactive_table(df=df_latest_toshow)
-            csv = convert_df(df_latest_toshow)
-            st.download_button(
-            label="csv로 저장하기",
-            data=csv,
-            file_name=f"IG_data_{all_date.max().strftime('%Y%m%d')}.csv",
-            mime='text/csv',
-            )    
+            # csv = convert_df(df_latest_toshow)
+            # st.download_button(
+            # label="csv로 저장하기",
+            # data=csv,
+            # file_name=f"IG_data_{all_date.max().strftime('%Y%m%d')}.csv",
+            # mime='text/csv',
+            # )    
     
         with st.expander(label = '게시물 보기'):
             df_media = media.copy()
@@ -276,7 +249,11 @@ def main():
         show_glossary()
     
 st.set_page_config(
-    page_title='WB-A9 인스타그램 현황', layout='wide')
+    page_title='WB-A9 인스타그램 현황', layout='wide',
+    page_icon = 'img/winebook_official.jpeg',
+    menu_items={
+        'About': 'Developer: jihong2jihong@gmail.com',
+    })
 
 main()
 

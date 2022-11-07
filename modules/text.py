@@ -16,7 +16,7 @@ def inc_dec(number):
 
 def translate(column_or_index):
     trans_dict = {'rank': '순위', 'name': '이름', 'followers' : '팔로워', 'follows': '팔로우', 'media': '게시물', 'like': '좋아요', 'comments': '댓글', 'diff': '증감(수)', 'pct_change': '증감(%)', 'count': '수', 'ratio': '당', 'date': '날짜', 'engagementrate': '참여도',
-    'carousel': '캐러셀', 'album': '앨범', 'image': '이미지', 'video': '영상', 'engagement': '참여 수', 'type': '종류'}
+    'carousel': '캐러셀', 'album': '앨범', 'image': '이미지', 'video': '영상', 'engagement': '참여 수', 'type': '종류', 'timestamp': '업로드 시간', 'permalink': '게시물 주소', 'caption': '캡션'}
     trans_names = []
     for name in column_or_index:
         name = name.lower()

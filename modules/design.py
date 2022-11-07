@@ -11,11 +11,16 @@ all_business = ['WSA와인아카데미', 'Wine Folly', 'aft
 business_colormap = dict(zip(all_business, colors[:len(all_business)-1]))
     
 
-def Bar(df:pd.DataFrame, x:str, y:str, group:str, title:str = '', text_auto = False, colormap = None, range_slider:bool = False, barmode = 'relative', facet_col = None):
-    
-    fig = px.bar(data_frame = df, barmode = barmode, text = group, text_auto = text_auto, x = x, y = y , color = group , title = title, hover_data = [group, y, x], color_discrete_map = colormap, height = 500, opacity =0.7, facet_col = facet_col)
+def Bar(df:pd.DataFrame, x:str, y:str, group:str, text = None, title:str = '', colormap = None, range_slider:bool = False, barmode = 'relative', facet_col = None):
+    texttemplate = "%{text}"
+    if text:
+        if df[text].dtype == float:
+            texttemplate = "%{text:.2f}"
+        
+
+    fig = px.bar(data_frame = df, barmode = barmode, text = text, x = x, y = y , color = group , title = title, hover_data = [group, y, x], color_discrete_map = colormap, width = 1500,  height = 500, opacity =0.7, facet_col = facet_col)
     # fig = px.bar(data_frame = df, text = group, text_auto = text_auto, x = x, y = y , color = group , title = title, hover_data = [group, y, x], color_discrete_map = colormap,  width = 1000, opacity =0.7)
-    fig.update_traces(texttemplate="%{text}", textangle = 90, textposition = 'inside')
+    fig.update_traces(texttemplate=texttemplate, textangle = 90, textposition = 'inside')
     fig.update_layout(uniformtext_minsize=12, uniformtext_mode='hide')
 
 
