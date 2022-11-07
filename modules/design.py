@@ -20,7 +20,7 @@ def Bar(df:pd.DataFrame, x:str, y:str, group:str, text = None, title:str = '', c
 
     fig = px.bar(data_frame = df, barmode = barmode, text = text, x = x, y = y , color = group , title = title, hover_data = [group, y, x], color_discrete_map = colormap, width = 1500,  height = 500, opacity =0.7, facet_col = facet_col)
     # fig = px.bar(data_frame = df, text = group, text_auto = text_auto, x = x, y = y , color = group , title = title, hover_data = [group, y, x], color_discrete_map = colormap,  width = 1000, opacity =0.7)
-    fig.update_traces(texttemplate=texttemplate, textangle = 90, textposition = 'inside')
+    fig.update_traces(texttemplate=texttemplate, textangle = 90, textposition = 'auto')
     fig.update_layout(uniformtext_minsize=12, uniformtext_mode='hide')
 
 
