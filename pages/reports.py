@@ -17,12 +17,12 @@ def main():
     
     current_time = pd.to_datetime(datetime.now(tz = timezone(timedelta(hours=9))))
 
-    report_period = pd.date_range(start = report_init, end = current_time - timedelta(days = 7), freq = '7D')
+    report_period = pd.date_range(start = report_init, end = current_time, freq = '7D')
     
     with st.sidebar:
         target_business = st.selectbox('분석 계정', options = ['winebook_official', 'after9'])
-        report_start = st.selectbox(label = '주차', options = report_period[::-1], format_func = get_week_num)
-        report_end = pd.to_datetime(report_start + timedelta(days = 7))
+        report_end = st.selectbox(label = '주차', options = report_period[::-1], format_func = get_week_num)
+        report_start = pd.to_datetime(report_end - timedelta(days = 7))
         report_date = report_end
         # report_date = pd.to_datetime(report_end + timedelta(days = 0))
         
@@ -55,24 +55,20 @@ def main():
     
     df_plot_weekly = df_weekly_summary[(df_weekly_summary['날짜'].dt.dayofweek == report_date.dayofweek)]
     
-    # df_plot_weekly = df_weekly_summary[df_weekly_summary['날짜'].dt.dayofweek == report_date.dayofweek]
     df_plot_weekly['날짜'] = date_format(df_plot_weekly['날짜'])
     all_business = sorted(df_weekly_summary['이름'].unique().tolist())
-    # # business_colormap = dict(zip(all_business, px.colors.qualitative.Alphabet[:len(all_business)+1]))
-    # business_colormap = dict(zip(all_business, ['#f7b32b', '#08605f', '#8e4162', '#b3cdd1', '#c7f0bd', '#bbe5ed', '#9f4a54', '#fff07c', '#ff7f11', '#ff1b1c', '#edc9ff', '#f2b79f', '#0c6291', '#231123']))
+    
     tab1, tab2 = st.tabs(['보고서', '용어 사전'])
     with tab1:
         col1, col2 = st.columns([0.8, 0.2])
         with col1:
             st_header(target_business, num = 2)
-            st_header(f'{get_week_num(report_start)} 주간 보고서', num = 3)
+            st_header(f'{get_week_num(report_end)} 주간 보고서', num = 3)
             st.caption(f'분석 기간: {date_format(report_start)} ~ {date_format(report_end)}')
             st.caption(f'작성일: {date_format(report_date)} 월요일' )
             
 
         with col2:
-            
-            # url = df_weekly_summary.sort_values('날짜', ascending = False).loc[df_weekly_summary['이름'] == target_business, 'profile picture url'].unique()[0]
             image_path = f"img/{target_business}.jpeg"
             st.image(image_path)
 
@@ -144,12 +140,16 @@ def main():
 
         with st.container():
             st_header('주간 Top3 게시물(참여도 기준)', num = 6)
+            df_weekly_follower_cnt = df_weekly_summary.loc[date_format(df_weekly_summary['날짜']) == date_format(report_date), ['이름', '팔로워 수']]
+            df_er = pd.merge(weekly_media, df_weekly_follower_cnt, how = 'inner', left_on = 'name', right_on = '이름')
+            df_er['engagementRate'] = 100 * df_er['engagement'] / df_er['팔로워 수']
             
-
             for business in [(all_business, '전체'), ([target_business], target_business)]:
-                er_top3 = weekly_media.loc[(weekly_media['name'].isin(business[0]))].nlargest(3, 'engagement')
                 
-                if not weekly_media.empty:
+                
+                er_top3 = df_er.loc[(weekly_media['name'].isin(business[0]))].nlargest(3, 'engagementRate')
+                
+                if not df_er.empty:
                     with st.expander(f'{business[1]}'):
 
                         for c in ['timestamp', 'date']:
@@ -176,6 +176,7 @@ def main():
                                     st.markdown(f'''
                                     ❤️ {er_top3[c]['like_count']}
                                     💬 {er_top3[c]['comments_count']}
+                                    (참여도 {er_top3[c]['engagementRate']: .2f}%)
                                     ''')
                                     st.caption(er_top3[c]['caption'])
                                     
