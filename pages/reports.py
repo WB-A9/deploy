@@ -26,8 +26,6 @@ def main():
         report_end = st.selectbox(label = '주차', options = report_period[::-1], format_func = get_week_num)
         report_start = pd.to_datetime(report_end - timedelta(days = 7))
         report_date = report_end
-        # report_date = pd.to_datetime(report_end + timedelta(days = 0))
-        
         
     
     REPORT_DATA_BASE = 'data/report'
@@ -60,6 +58,24 @@ def main():
     df_plot_weekly['날짜'] = date_format(df_plot_weekly['날짜'])
     all_business = sorted(df_weekly_summary['이름'].unique().tolist())
     
+    with st.sidebar:
+        with st.expander('그래프에 포함'):
+            selected_business = []
+            all_select = st.button('전체 선택')
+            all_rm = st.button('전체 제거')
+
+            for business in all_business:
+                tmp_key = 'plot_'+business
+                if all_select:
+                    st.session_state[tmp_key] = True
+                if all_rm:
+                    st.session_state[tmp_key] = False
+                tmp_check = st.checkbox(business, key = tmp_key, value = business != 'Wine Folly')
+                if tmp_check:
+                    selected_business.append(business)
+                    
+            
+    
     tab1, tab2, tab3 = st.tabs(['보고서', '데이터 보기', '용어 사전'])
     with tab1:
         col1, col2 = st.columns([0.8, 0.2])
@@ -78,8 +94,8 @@ def main():
         with st.container():
             st_header('1. 팔로워 수', num = 4)
         
-            largest_inc = df_weekly_summary.loc[date_format(df_weekly_summary['날짜']) == date_format(report_date)].nlargest(1, '팔로워 증감(수)')['이름'].values[0]
-            smallest_inc = df_weekly_summary.loc[date_format(df_weekly_summary['날짜']) == date_format(report_date)].nsmallest(1, '팔로워 증감(수)')['이름'].values[0]
+            largest_inc = df_weekly_summary.loc[date_format(df_weekly_summary['날짜']) == date_format(report_date)].nlargest(1, '팔로워 증감(%)')['이름'].values[0]
+            smallest_inc = df_weekly_summary.loc[date_format(df_weekly_summary['날짜']) == date_format(report_date)].nsmallest(1, '팔로워 증감(%)')['이름'].values[0]
             
             business_to_report = [target_business, largest_inc, smallest_inc]
             metric_header = ['본 계정', 'Weekly Best', 'Weekly Worst']
@@ -92,10 +108,12 @@ def main():
                     st.metric(f'{business}', value = f"{report_data['팔로워 수']}명", delta = f"{report_data['팔로워 증감(수)']:.0f}명({report_data['팔로워 증감(%)']:.2f}%)")
                 # st.markdown(f'''<**{report_data['이름']}**>의 {'팔로워 수'}({report_data['팔로워 수']:.0f}명)는 전주 대비 **{abs(report_data['followers_diff']):.0f}명({abs(report_data['followers_pct_change']):.2f}%)** {inc_dec(report_data['followers_diff'])}''')
             
-            for feature in ["팔로워 수", "팔로워 증감(수)"]:
-                fig = Bar(df = df_plot_weekly.loc[(df_plot_weekly['날짜'] == date_format(report_date)) | (df_plot_weekly['날짜'] == date_format(report_start))].sort_values(['날짜', feature]), text = feature, y = feature, x = '이름', group = '이름', colormap = business_colormap , title = feature, range_slider = False, barmode = 'relative', facet_col = '날짜')
-                fig.update_traces(visible = 'legendonly', selector = ({'name': 'Wine Folly'}))
-                st.plotly_chart(fig, use_container_width=True)
+            df_to_plot = df_plot_weekly.loc[((df_plot_weekly['날짜'] == date_format(report_date)) | (df_plot_weekly['날짜'] == date_format(report_start))) & (df_plot_weekly["이름"].isin(selected_business))]
+            if selected_business:
+                for feature in ["팔로워 수", "팔로워 증감(수)"]:
+                    fig = Bar(df = df_to_plot.sort_values(['날짜', feature]), text = feature, y = feature, x = '이름', group = '이름', colormap = business_colormap , title = feature, range_slider = False, barmode = 'relative', facet_col = '날짜')
+                    #fig.update_traces(visible = 'legendonly', selector = ({'name': 'Wine Folly'}))
+                    st.plotly_chart(fig, use_container_width=True)
 
         
         with st.container():
@@ -113,16 +131,17 @@ def main():
                     st_header(metric_header[b_idx], num = 5)
                     st.metric(f'{business}', value = f"{report_data['참여도']:.2f}%", delta = f"{report_data['참여도 증감(수)']:.2f}pp({report_data['참여도 증감(%)']:.2f}%)")
             
-            for feature in ["참여도", "참여도 증감(%)"]:
-                fig = Bar(df = df_plot_weekly.loc[(df_plot_weekly['날짜'] == date_format(report_date)) | (df_plot_weekly['날짜'] == date_format(report_start))].sort_values(['날짜', feature]), text = feature, y = feature, x = '이름', group = '이름', colormap = business_colormap , title = feature, range_slider = False, barmode = 'relative', facet_col = '날짜')
-                # fig.update_traces(visible = 'legendonly', selector = ({'name': 'Wine Folly'}))
-                st.plotly_chart(fig, use_container_width=True)
+            if selected_business:
+                for feature in ["참여도", "참여도 증감(%)"]:
+                    fig = Bar(df = df_to_plot.sort_values(['날짜', feature]), text = feature, y = feature, x = '이름', group = '이름', colormap = business_colormap , title = feature, range_slider = False, barmode = 'relative', facet_col = '날짜')
+                    ## fig.update_traces(visible = 'legendonly', selector = ({'name': 'Wine Folly'}))
+                    st.plotly_chart(fig, use_container_width=True)
 
         with st.container():
             st_header('3. 게시물', num = 4)
         
-            largest_inc = df_weekly_summary.loc[date_format(df_weekly_summary['날짜']) == date_format(report_date)].nlargest(1, '게시물 증감(수)')['이름'].values[0]
-            smallest_inc = df_weekly_summary.loc[date_format(df_weekly_summary['날짜']) == date_format(report_date)].nsmallest(1, '게시물 증감(수)')['이름'].values[0]
+            largest_inc = df_weekly_summary.loc[date_format(df_weekly_summary['날짜']) == date_format(report_date)].nlargest(1, '게시물 증감(%)')['이름'].values[0]
+            smallest_inc = df_weekly_summary.loc[date_format(df_weekly_summary['날짜']) == date_format(report_date)].nsmallest(1, '게시물 증감(%)')['이름'].values[0]
             
             business_to_report = [target_business, largest_inc, smallest_inc]
             metric_header = ['본 계정', 'Weekly Best', 'Weekly Worst']
@@ -134,12 +153,12 @@ def main():
                     st_header(metric_header[b_idx], num = 5)
                     st.metric(f'{business}', value = f"{report_data['게시물 수']}개", delta = f"{report_data['게시물 증감(수)']:.0f}개({report_data['게시물 증감(%)']:.2f}%)")
                 
+            if selected_business:
+                for feature in ["게시물 수", "게시물 증감(수)"]:
+                    fig = Bar(df = df_to_plot.sort_values(['날짜', feature]), text = feature, y = feature, x = '이름', group = '이름', colormap = business_colormap , title = feature, range_slider = False, barmode = 'relative', facet_col = '날짜')
+                    ## fig.update_traces(visible = 'legendonly', selector = ({'name': 'Wine Folly'}))
+                    st.plotly_chart(fig, use_container_width=True)
             
-            for feature in ["게시물 수", "게시물 증감(수)"]:
-                fig = Bar(df = df_plot_weekly.loc[(df_plot_weekly['날짜'] == date_format(report_date)) | (df_plot_weekly['날짜'] == date_format(report_start))].sort_values(['날짜', feature]), text = feature, y = feature, x = '이름', group = '이름', colormap = business_colormap , title = feature, range_slider = False, barmode = 'relative', facet_col = '날짜')
-                # fig.update_traces(visible = 'legendonly', selector = ({'name': 'Wine Folly'}))
-                st.plotly_chart(fig, use_container_width=True)
-
         with st.container():
             st_header('주간 Top3 게시물(참여도 기준)', num = 6)
             df_weekly_follower_cnt = df_weekly_summary.loc[date_format(df_weekly_summary['날짜']) == date_format(report_date), ['이름', '팔로워 수']]

@@ -16,7 +16,8 @@ def Bar(df:pd.DataFrame, x:str, y:str, group:str, text = None, title:str = '', c
     if text:
         if df[text].dtype == float:
             texttemplate = "%{text:.2f}"
-        
+        if '수' in text:
+            texttemplate = "%{text:.0f}"
 
     fig = px.bar(data_frame = df, barmode = barmode, text = text, x = x, y = y , color = group , title = title, hover_data = [group, y, x], color_discrete_map = colormap, width = 1500,  height = 500, opacity =0.7, facet_col = facet_col)
     # fig = px.bar(data_frame = df, text = group, text_auto = text_auto, x = x, y = y , color = group , title = title, hover_data = [group, y, x], color_discrete_map = colormap,  width = 1000, opacity =0.7)
@@ -55,7 +56,7 @@ def Bar(df:pd.DataFrame, x:str, y:str, group:str, text = None, title:str = '', c
             t=110,
         ),
         
-        showlegend=True,
+        showlegend=False,
         plot_bgcolor='white'
     )
     

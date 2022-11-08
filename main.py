@@ -22,7 +22,7 @@ def click_business(all_business, selected_name):
     if st.session_state.all_business:
         st.session_state.business_to_compare = list(set(all_business) - set([selected_name]))
         del st.session_state.all_business 
-    elif st.session_state.wba9:
+    if st.session_state.wba9:
         st.session_state.business_to_compare = list(set(['winebook_official', 'after9']) - set([selected_name]))
         del st.session_state.wba9
 
