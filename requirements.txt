@@ -2,3 +2,5 @@ pandas
 streamlit-aggrid
 altair
 plotly
+pymysql
+sqlalchemy
