@@ -2,5 +2,4 @@ pandas
 streamlit-aggrid
 altair
 plotly
-PyMySQL
 SQLAlchemy
