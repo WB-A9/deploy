@@ -5,11 +5,11 @@ import plotly.io as pio
 from modules.stats import Summary
 from modules.text import show_glossary, st_header, translate, date_format, get_week_num
 from datetime import datetime, timedelta, timezone
-import os
+from modules.db import load_data, get_by_query, insert_data
 from modules.tools import aggrid_interactive_table, convert_df
 from modules.design import Bar, business_colormap
-# from modules.authentification import check_password, signout
-
+# from modules.auth import check_password, signout
+import os
 
 pio.templates.default = "simple_white"
 
@@ -27,32 +27,27 @@ def main():
         report_start = pd.to_datetime(report_end - timedelta(days = 7))
         report_date = report_end
         
+    df_weekly_summary = load_data('weekly_summary')
+    weekly_media = get_by_query(f"SELECT * FROM test_weekly_media WHERE date > '{date_format(report_start, '-')}'")
     
-    REPORT_DATA_BASE = 'data/report'
-    w_summary_data_path = f"weekly_summary_{date_format(report_date, format = '')}.csv"
-    w_media_data_path = f"weekly_media_{date_format(report_date, format = '')}.csv"
+    if not date_format(report_date) in date_format(df_weekly_summary['날짜']).tolist():
+        with st.spinner(text="Updating data for weekly reports"):
+            df_daily_summary = load_data('daily_summary')
+            df_daily_summary['date'] = pd.to_datetime(df_daily_summary['date'])
+            summarizer = Summary(df_daily_summary.sort_values('date'))
+            df_weekly_summary = summarizer.get_summaries(summary_func=['diff', 'pct_change'], periods = [7])
+            df_weekly_summary.columns = translate(df_weekly_summary.columns)
+            df_weekly_summary = df_weekly_summary.loc[df_weekly_summary['날짜'].dt.dayofweek == 0]
+            
+            insert_data(df_weekly_summary.loc[df_weekly_summary['날짜'] == df_weekly_summary['날짜'].max()], 'weekly_summary')   
     
-    if os.path.exists(os.path.join(REPORT_DATA_BASE, w_summary_data_path)):
-        df_weekly_summary = pd.read_csv(os.path.join(REPORT_DATA_BASE, w_summary_data_path))
-        df_weekly_summary['날짜'] = pd.to_datetime(df_weekly_summary['날짜'])    
-    else: 
-        df_daily_summary = pd.read_csv('data/df_daily_summary.csv')
-        df_daily_summary['date'] = pd.to_datetime(df_daily_summary['date'])
-        summarizer = Summary(df_daily_summary.sort_values('date'))
-        df_weekly_summary = summarizer.get_summaries(summary_func=['diff', 'pct_change'], periods = [7])
-        df_weekly_summary.columns = translate(df_weekly_summary.columns)
-        df_weekly_summary.to_csv(os.path.join(REPORT_DATA_BASE, w_summary_data_path), index = False)
-    if os.path.exists(os.path.join(REPORT_DATA_BASE, w_media_data_path)):
-        weekly_media = pd.read_csv(os.path.join(REPORT_DATA_BASE, w_media_data_path))
-        weekly_media['timestamp'] = pd.to_datetime(weekly_media['timestamp']) 
-        weekly_media['date'] = pd.to_datetime(weekly_media['date']) 
-    else:
-        media = pd.read_csv("data/updated_media.csv")
-        weekly_media = media.copy().loc[media['timestamp'].between(date_format(report_start, format = '-'), date_format(report_end, format = '-'))]
-        weekly_media['engagement'] = weekly_media['like_count'] + weekly_media['like_count']
-        weekly_media.to_csv(os.path.join(REPORT_DATA_BASE, w_media_data_path), index = False)
-    
-    
+    if weekly_media.empty:
+          with st.spinner(text="Updating data for weekly reports"):
+            media = load_data('latest_media')
+            weekly_media = media.loc[media['timestamp'].between(date_format(report_start, format = '-'), date_format(report_end, format = '-'))]
+            weekly_media['engagement'] = weekly_media['like_count'] + weekly_media['comments_count']
+            insert_data(weekly_media, 'weekly_media')      
+       
     df_plot_weekly = df_weekly_summary[(df_weekly_summary['날짜'].dt.dayofweek == report_date.dayofweek)]
     
     df_plot_weekly['날짜'] = date_format(df_plot_weekly['날짜'])

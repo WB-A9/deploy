@@ -6,6 +6,7 @@ from modules.stats import Summary
 from modules.text import show_glossary, translate, date_format
 from modules.design import business_colormap
 from modules.tools import aggrid_interactive_table, convert_df
+from modules.db import load_data
 import plotly.graph_objects as go
 
 pio.templates.default = "simple_white"
@@ -27,9 +28,9 @@ def click_business(all_business, selected_name):
         del st.session_state.wba9
 
 def main():
-    
-    daily_summary = pd.read_csv('data/df_daily_summary.csv')
-    media = pd.read_csv('data/updated_media.csv')
+    daily_summary, media = load_data(['daily_summary', 'latest_media'])
+    # daily_summary = pd.read_csv('data/df_daily_summary.csv')
+    # media = pd.read_csv('data/updated_media.csv')
     
     df_daily_summary = daily_summary.copy()
     df_daily_summary['date'] = pd.to_datetime(df_daily_summary['date'])
