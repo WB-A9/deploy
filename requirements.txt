@@ -3,3 +3,4 @@ streamlit-aggrid
 altair
 plotly
 sqlalchemy
+pymysql
