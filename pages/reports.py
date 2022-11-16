@@ -157,13 +157,14 @@ def main():
         with st.container():
             st_header('주간 Top3 게시물(참여도 기준)', num = 6)
             df_weekly_follower_cnt = df_weekly_summary.loc[date_format(df_weekly_summary['날짜']) == date_format(report_date), ['이름', '팔로워 수']]
+
             df_er = pd.merge(weekly_media, df_weekly_follower_cnt, how = 'inner', left_on = 'name', right_on = '이름')
             df_er['engagementRate'] = 100 * df_er['engagement'] / df_er['팔로워 수']
-            
+
             for business in [(all_business, '전체'), ([target_business], target_business)]:
                 
                 
-                er_top3 = df_er.loc[(weekly_media['name'].isin(business[0]))].nlargest(3, 'engagementRate')
+                er_top3 = df_er.loc[(df_er['name'].isin(business[0]))].nlargest(3, 'engagementRate')
                 
                 if not df_er.empty:
                     with st.expander(f'{business[1]}'):
