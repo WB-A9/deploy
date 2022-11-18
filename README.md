@@ -10,13 +10,13 @@
 
 - 스크린샷
     
-    [<img src= "img/1.png?raw=true"  width = "500">]()
+    [<img src= "img/1.png?raw=true"  width = "800">]()
     
-    [<img src= "img/2.png?raw=true" width = "500">]()
+    [<img src= "img/2.png?raw=true" width = "800">]()
     
-    [<img src= "img/3.png?raw=true" width = "500">]()
+    [<img src= "img/3.png?raw=true" width = "800">]()
     
-    [<img src= "img/4.png?raw=true" width = "500">]()
+    [<img src= "img/4.png?raw=true" width = "800">]()
     
 
 ### 데이터 수집 및 자동화
@@ -71,7 +71,7 @@
 
 - Google Cloud Platform 상에 MySQL 서버 구축
     
-    [<img src= "img/5.png?raw=true" width = "500">]()
+    [<img src= "img/8.png?raw=true" width = "800">]()
     
 
 ### 데이터 분석
@@ -87,7 +87,7 @@
         해당 계정이 팔로우 하는 계정 수
         4) 게시물 수 media count
         해당 계정의 게시물 수
-         5) 좋아요 수 like count
+         8) 좋아요 수 like count
         게시물에 달린 좋아요 수 합계
         6) 댓글 수 comments count
         게시물에 달린 댓글 수 합계
@@ -155,10 +155,10 @@
 
 - streamlit 자체 함수를 활용한 수치 표현
     
-    [<img src= "img/6.png?raw=true" width = "500">]()
+    [<img src= "img/6.png?raw=true" width = "800">]()
     
 - plotly를 활용한 그래프 시각화
     
-    [<img src= "img/7.png?raw=true" width = "500">]()
+    [<img src= "img/7.png?raw=true" width = "800">]()
         
-    [<img src= "img/8.png?raw=true" width = "500">]()
+    [<img src= "img/8.png?raw=true" width = "800">]()
