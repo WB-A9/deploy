@@ -1,33 +1,22 @@
 # 와인 관련 Instagram 분석
 
-구분: EDA, 대시보드, 데이터분석
-날짜: 2022/09/19
-내용: 와인 관련 인스타그램 계정 데이터 분석 및 대시보드 작성
-배포: https://wba9-insta.streamlitapp.com/
-비고: 개인
-사용 도구: GCP, Github Actions, MySQL, Python, Streamlit
-상태: 진행중
-주요: Yes
-
 ### 목적
 
 - 와인 관련 인스타그램 계정 데이터 분석 및 대시보드 작성
 
 ### 배포
 
-[](https://wba9-insta.streamlitapp.com/)
-
-[https://github.com/WB-A9/deploy](https://github.com/WB-A9/deploy)
+[<h3 style="text-decoration:none;" target="_blank">바로가기</h3>](https://wba9-insta.streamlitapp.com/)
 
 - 스크린샷
     
-    <img src="img/1.png?raw=true"  width = "100")
+    [<img src= "img/1.png?raw=true"  width = "500">]()
     
-    <img src= "img/2.png?raw=true" width = "100")
+    [<img src= "img/2.png?raw=true" width = "500">]()
     
-    <img src= "img/3.png?raw=true" width = "100")
+    [<img src= "img/3.png?raw=true" width = "500">]()
     
-    <img src= "img/4.png?raw=true" width = "100")
+    [<img src= "img/4.png?raw=true" width = "500">]()
     
 
 ### 데이터 수집 및 자동화
@@ -82,14 +71,14 @@
 
 - Google Cloud Platform 상에 MySQL 서버 구축
     
-    <img src= "img/5.png?raw=true" width = "100")
+    [<img src= "img/5.png?raw=true" width = "500">]()
     
 
 ### 데이터 분석
 
 - 지표 설정
-    - 1. 기본 수치
-        
+    1. 기본 수치
+       
         1) 순위 rank
         집계하는 전체 계정의 일간 팔로워 수 내림차순
         2) 팔로워 followers count
@@ -105,14 +94,14 @@
         7) 참여 engagement
         좋아요 수와 댓글 수의 합계
         
-    - 2. 복합 수치
+    2. 복합 수치
         
         1) 증감(수) change in count
         기준일 대비 수치 변화량
         2) 증감(%) change in percentage
-        기준일 대비 수치 변화량의 백분율(100 * 증감(수) / 기준일 수치)
+        기준일 대비 수치 변화량의 백분율(800 * 증감(수) / 기준일 수치)
         3) 참여도 engagement rate
-        팔로워 수 대비 참여 백분율(100 * 참여 / 팔로워 수)
+        팔로워 수 대비 참여 백분율(800 * 참여 / 팔로워 수)
         4) 게시물 당 OO OO-media count ratio
         게시물 하나 당 OO 수(OO 수 / 게시물 수)
         
@@ -143,7 +132,7 @@
             if summary_func == 'diff':
                 defined_func = lambda x: x.diff(periods)
             elif summary_func == 'pct_change':
-                defined_func = lambda x: x.pct_change(periods) * 100
+                defined_func = lambda x: x.pct_change(periods) * 800
             df_summary = self.df.groupby('name')[[c for c in self.df.columns if ('count' in c) or ('ratio' in c) or (c == 'rank') or ('rate' in c)]].transform(defined_func)
             df_summary.columns = [c.split('_count')[0] + f'_{summary_func}' for c in df_summary.columns]
             if 'rank_diff' in df_summary.columns:
@@ -153,7 +142,7 @@
             self.df_summary[summary_func][periods] = df_summary
         
         def _calc_engage_rate(self):
-            self.df['engagementrate'] = 100 * (self.df['like_count'] + self.df['comments_count']) / self.df['followers_count']
+            self.df['engagementrate'] = 800 * (self.df['like_count'] + self.df['comments_count']) / self.df['followers_count']
         
         @staticmethod
         def calc_ab_ratio(df, a, b):
@@ -166,10 +155,10 @@
 
 - streamlit 자체 함수를 활용한 수치 표현
     
-    <img src= "img/6.png?raw=true" width = "100")
+    [<img src= "img/6.png?raw=true" width = "500">]()
     
 - plotly를 활용한 그래프 시각화
     
-    <img src= "img/7.png?raw=true" width = "100")
+    [<img src= "img/7.png?raw=true" width = "500">]()
         
-    <img src= "img/8.png?raw=true" width = "100")
+    [<img src= "img/8.png?raw=true" width = "500">]()
