@@ -6,7 +6,7 @@
 
 ### 배포
 
-[<h3 style="text-decoration:none;" target="_blank">바로가기</h3>](https://wba9-insta.streamlitapp.com/)
+[바로가기](https://wba9-insta.streamlitapp.com/)
 
 - 스크린샷
     
