@@ -6,7 +6,7 @@
 
 ### 배포
 
-[바로가기](https://wba9-insta.streamlitapp.com/)
+[바로가기](https://wba9-instagram.streamlitapp.com/)
 
 - 스크린샷
     
