@@ -7,6 +7,7 @@ from modules.text import show_glossary, translate, date_format
 from modules.design import business_colormap
 from modules.tools import aggrid_interactive_table, convert_df
 from modules.db import load_data
+from modules.auth import check_password, signout
 import plotly.graph_objects as go
 
 pio.templates.default = "simple_white"
@@ -47,8 +48,11 @@ def main():
         
         selected_name = st.selectbox('보고 싶은 계정', all_business, index=3, on_change = update_business)
         period =  st.selectbox('증감 대비 기준', options = period_range, format_func= lambda x: str(x)+'일 전')
+        if check_password():
+            if signout():
+                return None
 
-        # st.markdown("jihong2jihong@gmail.com")
+        
 
     df_daily_summary = summarizer.get_summaries(summary_func=['diff', 'pct_change'], periods = [period])
     df_latest = df_daily_summary.loc[df_daily_summary['date'] == up_to_date].reset_index(drop = True)    
@@ -256,9 +260,13 @@ st.set_page_config(
         'About': 'Developer: jihong2jihong@gmail.com',
     })
 
-main()
+if check_password():
+    main()
 
-
+with st.sidebar:
+    st.info('''문의 및 요청  
+    *[jihong2jihong@gmail.com](mailto:jihong2jihong@gmail.com)*
+        ''', icon = "❓")
 
 
 

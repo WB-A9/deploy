@@ -8,7 +8,7 @@ from datetime import datetime, timedelta, timezone
 from modules.db import load_data, get_by_query, insert_data
 from modules.tools import aggrid_interactive_table, convert_df
 from modules.design import Bar, business_colormap
-# from modules.auth import check_password, signout
+from modules.auth import check_password, signout
 import os
 
 pio.templates.default = "simple_white"
@@ -68,6 +68,9 @@ def main():
                 tmp_check = st.checkbox(business, key = tmp_key, value = business != 'Wine Folly')
                 if tmp_check:
                     selected_business.append(business)
+        if check_password():
+            if signout():
+                return None
                     
             
     
@@ -206,7 +209,7 @@ def main():
                     st.write('지난 주 게시물이 없었습니다.')
             
             st.markdown('---')
-#             signout()
+            
     with tab2:
         
         summary_to_save = df_weekly_summary.loc[date_format(df_weekly_summary['날짜']) == date_format(report_date),
@@ -251,6 +254,10 @@ def main():
 
 st.set_page_config(layout='wide')
 
-# if check_password():
-main()
+if check_password():
+    main()
     
+with st.sidebar:
+    st.info('''문의 및 요청  
+    *[jihong2jihong@gmail.com](mailto:jihong2jihong@gmail.com)*
+        ''', icon = "❓")
