@@ -30,7 +30,6 @@ def main():
     df_weekly_summary = load_data('weekly_summary')
     weekly_media = get_by_query(f"SELECT * FROM test_weekly_media WHERE timestamp > '{date_format(report_start, '-')}'")
     
-    
 
     if not date_format(report_date) in date_format(df_weekly_summary['날짜']).tolist():
         with st.spinner(text="Updating data for weekly reports"):
