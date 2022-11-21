@@ -26,10 +26,12 @@ def main():
         report_end = st.selectbox(label = '주차', options = report_period[::-1], format_func = get_week_num)
         report_start = pd.to_datetime(report_end - timedelta(days = 7))
         report_date = report_end
-        
+    st.write(report_start)
     df_weekly_summary = load_data('weekly_summary')
-    weekly_media = get_by_query(f"SELECT * FROM test_weekly_media WHERE date > '{date_format(report_start, '-')}'")
+    weekly_media = get_by_query(f"SELECT * FROM test_weekly_media WHERE timestamp > '{date_format(report_start, '-')}'")
     
+    
+
     if not date_format(report_date) in date_format(df_weekly_summary['날짜']).tolist():
         with st.spinner(text="Updating data for weekly reports"):
             df_daily_summary = load_data('daily_summary')
@@ -46,8 +48,10 @@ def main():
             media = load_data('latest_media')
             weekly_media = media.loc[media['timestamp'].between(date_format(report_start, format = '-'), date_format(report_end, format = '-'))]
             weekly_media['engagement'] = weekly_media['like_count'] + weekly_media['comments_count']
-            insert_data(weekly_media, 'weekly_media')      
-       
+            insert_data(weekly_media, 'weekly_media')
+            
+
+
     df_plot_weekly = df_weekly_summary[(df_weekly_summary['날짜'].dt.dayofweek == report_date.dayofweek)]
     
     df_plot_weekly['날짜'] = date_format(df_plot_weekly['날짜'])
