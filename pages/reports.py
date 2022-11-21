@@ -26,7 +26,7 @@ def main():
         report_end = st.selectbox(label = '주차', options = report_period[::-1], format_func = get_week_num)
         report_start = pd.to_datetime(report_end - timedelta(days = 7))
         report_date = report_end
-    st.write(report_start)
+    
     df_weekly_summary = load_data('weekly_summary')
     weekly_media = get_by_query(f"SELECT * FROM test_weekly_media WHERE timestamp > '{date_format(report_start, '-')}'")
     
