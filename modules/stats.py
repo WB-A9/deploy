@@ -1,7 +1,7 @@
 class Summary():
     def __init__(self, df):
         self.df = df
-        self.df['rank'] = self.df.groupby(['date'])['followers_count'].rank(ascending = False).astype(int)
+        self.df['rank'] = self.df.groupby(['date'])['followers_count'].rank(ascending = False, method = 'min').astype(int)
         self.df_summary = {'diff' : dict(), 'pct_change' : dict()}
         self._calc_engage_rate()
         for a, b in [('like', 'media'), ('comments', 'media')]:
